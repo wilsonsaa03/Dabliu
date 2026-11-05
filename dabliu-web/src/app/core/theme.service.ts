@@ -1,4 +1,5 @@
-import { Injectable, effect, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Injectable, effect, inject, signal } from '@angular/core';
 
 export type Theme = 'light' | 'dark';
 
@@ -13,11 +14,14 @@ const THEME_COLOR: Record<Theme, string> = { dark: '#03050C', light: '#F6F8FD' }
 export class ThemeService {
   readonly theme = signal<Theme>('dark');
 
+  /** DOCUMENT de Angular: funciona tanto en el navegador como al prerenderizar en el servidor. */
+  private doc = inject(DOCUMENT);
+
   constructor() {
     effect(() => {
       const theme = this.theme();
-      document.documentElement.setAttribute('data-theme', theme);
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
+      this.doc.documentElement.setAttribute('data-theme', theme);
+      this.doc.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme]);
     });
   }
 
