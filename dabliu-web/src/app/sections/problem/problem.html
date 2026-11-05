@@ -1,0 +1,29 @@
+<section class="band band--alt" id="problemas">
+  <div class="wrap">
+    <div class="head" appReveal>
+      <span class="eyebrow">El punto de partida</span>
+      <h2 class="h2">Tu negocio tiene problemas. La tecnología puede resolverlos.</h2>
+    </div>
+
+    <div class="probs">
+      @for (p of problems; track p.title) {
+        <article class="prob" appReveal>
+          <span class="prob__x">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </span>
+          <div>
+            <h3>{{ p.title }}</h3>
+            <p>{{ p.text }}</p>
+          </div>
+        </article>
+      }
+    </div>
+
+    <div class="turn" appReveal>
+      <span class="turn__arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+      <p>DABLIU convierte estos problemas en <span class="grad">soluciones digitales.</span></p>
+    </div>
+  </div>
+</section>

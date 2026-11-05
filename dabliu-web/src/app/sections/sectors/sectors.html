@@ -1,0 +1,39 @@
+<section class="band" id="sectores">
+  <div class="wrap">
+    <div class="head" appReveal>
+      <span class="eyebrow">Sectores</span>
+      <h2 class="h2">Entendemos tu sector antes de escribir código.</h2>
+      <p class="lead">Empezamos por los negocios donde la tecnología resuelve problemas diarios y concretos.</p>
+    </div>
+
+    <div class="secs">
+      @for (s of sectors; track s.title) {
+        <article class="sec" appReveal>
+          <span class="sec__ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="s.icon"/></svg>
+          </span>
+          <h3>{{ s.title }}</h3>
+
+          <div>
+            <span class="sec__k">El problema</span>
+            <p>{{ s.problem }}</p>
+          </div>
+
+          <div>
+            <span class="sec__k">Lo que construimos</span>
+            <ul>
+              @for (b of s.builds; track b) { <li>{{ b }}</li> }
+            </ul>
+          </div>
+
+          <div class="sec__foot">
+            @if (s.proof) { <a class="sec__proof" [href]="s.proof.href">{{ s.proof.label }} →</a> }
+            <a class="sec__cta" href="#contacto">Solicitar diagnóstico gratuito</a>
+          </div>
+        </article>
+      }
+    </div>
+
+    <p class="other" appReveal>¿Tu negocio es de otro sector? <a href="#contacto">Cuéntanos qué necesitas.</a></p>
+  </div>
+</section>

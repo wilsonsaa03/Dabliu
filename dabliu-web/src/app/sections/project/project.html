@@ -1,0 +1,66 @@
+<section class="band" id="proyecto">
+  <div class="wrap mv">
+    <div class="mv__copy" appReveal>
+      <span class="eyebrow">Proyecto destacado</span>
+      <h2 class="h2">Tecnología que ya estamos construyendo.</h2>
+      <span class="status"><i></i>MoviFY · en desarrollo</span>
+      <p class="lead">MoviFY es una plataforma de movilidad diseñada para conectar usuarios con servicios de transporte y logística mediante una experiencia digital integrada.</p>
+
+      <div class="caps" aria-label="Capacidades de MoviFY">
+        @for (c of capabilities; track c) { <span>{{ c }}</span> }
+      </div>
+
+      @if (showDetail()) {
+        <div class="mv__detail" id="mv-detail">
+          @for (m of modules; track m.title) {
+            <div><b>{{ m.title }}</b><span>{{ m.text }}</span></div>
+          }
+        </div>
+      }
+
+      <div>
+        <button class="btn btn--primary" type="button" (click)="toggleDetail()"
+                [attr.aria-expanded]="showDetail()" aria-controls="mv-detail">
+          {{ showDetail() ? 'Ocultar detalles' : 'Conocer MoviFY' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Representación 3D de la plataforma: mapa inclinado, ruta, pines y app -->
+    <div class="map" appReveal aria-hidden="true">
+      <div class="map__plane">
+        <svg viewBox="0 0 400 400" preserveAspectRatio="none">
+          <defs>
+            <pattern id="mv-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M40 0H0V40" fill="none" stroke="rgba(80,140,255,.14)"/>
+            </pattern>
+          </defs>
+          <rect width="400" height="400" fill="url(#mv-grid)"/>
+          <path d="M0 120H400M0 260H400M110 0V400M280 0V400" stroke="rgba(90,150,255,.35)" stroke-width="10" fill="none"/>
+          <path d="M0 190C120 170 200 230 400 200" stroke="rgba(90,150,255,.22)" stroke-width="6" fill="none"/>
+          <rect x="130" y="140" width="130" height="100" rx="8" fill="rgba(43,107,255,.08)"/>
+          <path class="route" d="M60 330C110 300 110 260 110 200S200 120 280 120S350 80 360 50" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle class="route__start" cx="60" cy="330" r="9"/>
+          <circle class="route__end" cx="360" cy="50" r="9" stroke-width="3"/>
+        </svg>
+      </div>
+
+      @for (pin of pins; track pin.label) {
+        <div class="pin" [style]="pin.pos">
+          <span class="pin__head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="pin.icon"/></svg>
+          </span>
+          <span class="pin__lbl">{{ pin.label }}</span>
+          <span class="pin__stem"></span>
+        </div>
+      }
+
+      <div class="phone">
+        <span class="phone__bar"></span>
+        <div class="phone__map"></div>
+        <div class="phone__opts"><span>Moto</span><span>Taxi</span><span>Domicilio</span><span>Envío</span></div>
+        <div class="phone__btn">Solicitar servicio</div>
+      </div>
+    </div>
+  </div>
+</section>

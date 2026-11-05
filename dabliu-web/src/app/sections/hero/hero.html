@@ -1,0 +1,33 @@
+<section class="hero" id="inicio">
+  <div class="hero__bg" aria-hidden="true">
+    <div class="hero__glow"></div>
+    <div class="hero__grid"></div>
+  </div>
+
+  <div class="wrap hero__in">
+    <div class="hero__copy">
+      <span class="badge"><i></i>SOLUCIONES TECNOLÓGICAS</span>
+      <h1>Transformamos ideas en <span class="grad">soluciones digitales.</span></h1>
+      <p class="lead">Desarrollamos software, aplicaciones y plataformas digitales que ayudan a empresas y emprendimientos a crecer, automatizar procesos y aprovechar la tecnología.</p>
+      <div class="hero__ctas">
+        <a class="btn btn--primary" href="#contacto">
+          Solicitar diagnóstico gratuito
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn--ghost" href="#proyecto">Ver caso MoviFY</a>
+      </div>
+      <p class="hero__note">30 minutos · $0 COP · sin compromiso</p>
+      <div class="chips" aria-label="Especialidades">
+        @for (chip of chips; track chip) { <span>{{ chip }}</span> }
+      </div>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <div class="stage__fallback"></div>
+      <app-scene-3d variant="hero" />
+      @for (tag of tags; track tag.label) {
+        <span class="tag" [style]="tag.pos"><span class="tag__in">{{ tag.label }}</span></span>
+      }
+    </div>
+  </div>
+</section>

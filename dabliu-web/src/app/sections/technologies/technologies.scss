@@ -1,0 +1,59 @@
+:host { display: block; }
+
+.eco {
+  position: relative; height: 540px; overflow: hidden; border-radius: 28px; border: 1px solid var(--line);
+  background: radial-gradient(ellipse at 50% 50%, rgba(43, 107, 255, 0.16), transparent 60%), var(--bg);
+}
+.eco__lines {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  line { stroke: rgba(90, 170, 255, 0.22); stroke-width: 1; transition: stroke 0.3s; }
+  line.on { stroke: var(--cyan); stroke-width: 1.6; filter: drop-shadow(0 0 4px var(--cyan)); }
+}
+
+.node {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 6px; border: 0; border-radius: 16px; background: none; color: var(--fg); font: inherit; cursor: pointer;
+}
+.node__orb {
+  width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; color: var(--cyan);
+  background: var(--orb-node);
+  border: 1px solid rgba(110, 180, 255, 0.35);
+  box-shadow: 0 14px 30px -16px rgba(43, 107, 255, 1);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s, border-color 0.35s;
+  animation: hover3 8s ease-in-out infinite;
+  svg { width: 26px; height: 26px; }
+}
+.node:nth-of-type(odd) .node__orb { animation-delay: -4s; }
+@keyframes hover3 { 50% { translate: 0 -5px; } }
+.node__name { font-size: 13px; font-weight: 600; color: var(--fg-2); transition: color 0.3s; white-space: nowrap; }
+
+.node:hover, .node:focus-visible, .node.is-on {
+  .node__orb { transform: scale(1.14) rotate(-4deg); border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(69, 220, 255, 0.12), 0 0 40px -4px rgba(69, 220, 255, 0.85); }
+  .node__name { color: var(--fg); }
+}
+
+.node--hub .node__orb {
+  width: 96px; height: 96px; border-radius: 28px;
+  background: radial-gradient(circle at 35% 30%, #3d7dff, #0c1f66 70%); border-color: rgba(160, 210, 255, 0.55);
+  img { width: 70px; height: 70px; border-radius: 18px; object-fit: cover; mix-blend-mode: screen; }
+}
+
+.eco__info {
+  position: absolute; left: 24px; bottom: 24px; max-width: min(360px, calc(100% - 48px));
+  padding: 16px 18px; border-radius: 16px;
+  background: var(--glass-strong); border: 1px solid var(--line-strong);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  b { display: block; font-family: var(--f-display); font-size: 16px; }
+  span { font-size: 14px; color: var(--fg-2); }
+}
+
+/* En pantallas pequeñas el ecosistema pasa a cuadrícula */
+@media (max-width: 760px) {
+  .eco { height: auto; padding: 24px 12px 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 6px; }
+  .eco__lines { display: none; }
+  .node { position: static; transform: none; left: auto !important; top: auto !important; }
+  .node__name { white-space: normal; text-align: center; font-size: 12px; }
+  .node--hub { grid-column: 1 / -1; order: -1; }
+  .eco__info { position: static; grid-column: 1 / -1; max-width: none; margin-top: 8px; }
+}

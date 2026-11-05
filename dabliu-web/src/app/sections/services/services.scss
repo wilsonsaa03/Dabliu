@@ -1,0 +1,55 @@
+:host { display: block; }
+
+.svcs { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; perspective: 1200px; }
+
+.svc {
+  grid-column: span 3;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 14px; min-height: 260px; padding: 28px;
+  border-radius: 22px; border: 1px solid var(--line);
+  background: var(--card);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s, box-shadow 0.4s;
+
+  &:nth-child(-n + 3) { grid-column: span 4; }
+
+  /* brillo que aparece desde abajo al pasar el mouse */
+  &::after {
+    content: ''; position: absolute; inset: auto -30% -60% -30%; height: 80%; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(69, 220, 255, 0.28), transparent 60%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  &:hover, &:focus-within, &:focus-visible {
+    border-color: var(--line-strong);
+    box-shadow: 0 30px 60px -30px rgba(43, 107, 255, 0.8), 0 0 0 1px rgba(69, 220, 255, 0.08) inset;
+    &::after { opacity: 1; }
+    .svc__more { opacity: 1; transform: translateY(0) translateZ(16px); }
+  }
+
+  h3 { font-size: 19px; font-weight: 600; transform: translateZ(20px); }
+  p { font-size: 14.5px; color: var(--fg-2); transform: translateZ(12px); }
+}
+
+.svc__ic {
+  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; color: var(--cyan);
+  background: var(--orb);
+  border: 1px solid rgba(110, 190, 255, 0.35);
+  box-shadow: 0 12px 24px -12px rgba(43, 107, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transform: translateZ(30px);
+  svg { width: 26px; height: 26px; }
+}
+
+.svc__more {
+  margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px;
+  font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--cyan-soft);
+  opacity: 0.55; transform: translateY(6px) translateZ(16px); transition: opacity 0.45s, transform 0.45s;
+  span { padding: 4px 8px; border-radius: 6px; background: rgba(69, 220, 255, 0.08); border: 1px solid rgba(69, 220, 255, 0.18); }
+}
+
+@media (max-width: 1020px) {
+  .svc, .svc:nth-child(-n + 3) { grid-column: span 6; }
+  .svc:last-child { grid-column: span 12; }
+}
+@media (max-width: 620px) {
+  .svc, .svc:nth-child(-n + 3), .svc:last-child { grid-column: span 12; min-height: 0; }
+}

@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: dabliu-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dabliu}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+dabliu:
+  # Dominios de la landing autorizados a llamar la API (separados por coma).
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  # Usuario interno para consultar y gestionar las solicitudes.
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD}
+  # Límite de solicitudes públicas por IP para frenar spam.
+  rate-limit:
+    max-requests: ${RATE_LIMIT_MAX:5}
+    window: ${RATE_LIMIT_WINDOW:10m}

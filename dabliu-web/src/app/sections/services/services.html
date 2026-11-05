@@ -1,0 +1,25 @@
+<section class="band" id="servicios">
+  <div class="wrap">
+    <div class="head" appReveal>
+      <span class="eyebrow">Servicios</span>
+      <h2 class="h2">Tecnología diseñada para hacer crecer tu negocio.</h2>
+      <p class="lead">Primero entendemos el problema. Después elegimos la tecnología que mejor lo resuelve.</p>
+    </div>
+
+    <div class="svcs">
+      @for (s of services; track s.title) {
+        <article class="svc" tabindex="0" appReveal #card
+                 (pointermove)="tilt($event, card)" (pointerleave)="reset(card)">
+          <span class="svc__ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="s.icon"/></svg>
+          </span>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.text }}</p>
+          <div class="svc__more">
+            @for (e of s.extras; track e) { <span>{{ e }}</span> }
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>

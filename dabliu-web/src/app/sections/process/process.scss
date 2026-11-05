@@ -1,0 +1,48 @@
+:host { display: block; }
+
+.flow { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+
+/* Línea que une los nodos + partículas de luz que la recorren */
+.flow__track {
+  position: absolute; left: calc(100% / 12); right: calc(100% / 12); top: 31px; height: 2px;
+  background: linear-gradient(90deg, rgba(43, 107, 255, 0.2), rgba(69, 220, 255, 0.6), rgba(43, 107, 255, 0.2));
+  i {
+    position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    background: #dff8ff; box-shadow: 0 0 14px 3px var(--cyan), 0 0 30px 6px rgba(43, 107, 255, 0.6);
+    animation: travel 7s linear infinite;
+    &:nth-child(2) { animation-delay: -2.33s; }
+    &:nth-child(3) { animation-delay: -4.66s; }
+  }
+}
+@keyframes travel { 0% { left: 0; opacity: 0; } 6% { opacity: 1; } 94% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+@keyframes travelv { 0% { top: 0; opacity: 0; } 6% { opacity: 1; } 94% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+.step {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  h3 { font-size: 17px; font-weight: 600; }
+  p { font-size: 14px; color: var(--fg-3); max-width: 22ch; margin-inline: auto; }
+  &:hover .step__node { transform: scale(1.08); }
+}
+.step__node {
+  position: relative; z-index: 1; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--f-mono); font-weight: 500; font-size: 15px; color: #fff;
+  background: var(--step-node);
+  border: 1px solid rgba(110, 190, 255, 0.45);
+  box-shadow: 0 0 0 6px var(--bg-2), 0 0 28px -4px rgba(43, 107, 255, 0.9);
+  transition: transform 0.35s;
+}
+
+@media (max-width: 900px) {
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .flow__track {
+    left: 31px; right: auto; top: 32px; bottom: 32px; width: 2px; height: auto;
+    background: linear-gradient(180deg, rgba(43, 107, 255, 0.2), rgba(69, 220, 255, 0.6), rgba(43, 107, 255, 0.2));
+    i { left: 50%; animation-name: travelv; }
+  }
+  .step {
+    flex-direction: row; align-items: flex-start; gap: 20px; text-align: left;
+    > div { padding-top: 8px; }
+    p { max-width: none; margin: 4px 0 0; }
+  }
+  .step__node { flex: none; }
+}

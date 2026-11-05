@@ -1,0 +1,102 @@
+<section class="cta band--alt" id="contacto">
+  <app-scene-3d variant="cta" />
+
+  <div class="wrap cta__in">
+    <div class="cta__copy" appReveal>
+      <span class="eyebrow">Diagnóstico tecnológico gratuito</span>
+      <h2>¿Tienes una idea o un problema? <span class="grad">Empecemos por entenderlo.</span></h2>
+      <p class="lead">En 30 minutos revisamos contigo cómo opera tu negocio y te decimos qué tecnología te conviene y cuál no necesitas.</p>
+
+      <ul class="offer">
+        <li>Revisamos dónde se pierde tiempo o dinero en tu operación.</li>
+        <li>Te decimos qué conviene construir primero y qué no.</li>
+        <li>Te llevas una recomendación clara del siguiente paso.</li>
+      </ul>
+
+      <p class="price"><b>$0 COP</b><span>30 minutos · sin compromiso</span></p>
+
+      <div class="cta__contact">
+        <a [href]="contact.whatsappUrl" target="_blank" rel="noopener">WhatsApp {{ contact.whatsappLabel }}</a>
+        <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+      </div>
+    </div>
+
+    <div class="panel" appReveal>
+      @if (status() === 'sent') {
+        <div class="done" role="status">
+          <span class="done__ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          </span>
+          <h3>¡Solicitud recibida!</h3>
+          <p>Una persona del equipo lee tu solicitud y te escribe para agendar el diagnóstico.</p>
+          <button class="btn btn--ghost" type="button" (click)="reset()">Enviar otra solicitud</button>
+        </div>
+      } @else {
+        <form #formEl [formGroup]="form" (ngSubmit)="submit(formEl)" novalidate>
+          <h3>Solicita tu diagnóstico</h3>
+          <p class="panel__note">Una persona del equipo lee cada solicitud.</p>
+
+          <div class="grid">
+            <label class="field">
+              <span>Nombre *</span>
+              <input formControlName="fullName" autocomplete="name" [attr.aria-invalid]="invalid('fullName')">
+              @if (invalid('fullName')) { <small>Escribe tu nombre.</small> }
+            </label>
+            <label class="field">
+              <span>Empresa o negocio</span>
+              <input formControlName="company" autocomplete="organization">
+            </label>
+            <label class="field">
+              <span>WhatsApp o teléfono *</span>
+              <input formControlName="phone" type="tel" autocomplete="tel" inputmode="tel" [attr.aria-invalid]="invalid('phone')">
+              @if (invalid('phone')) { <small>Escribe un número válido.</small> }
+            </label>
+            <label class="field">
+              <span>Correo</span>
+              <input formControlName="email" type="email" autocomplete="email" [attr.aria-invalid]="invalid('email')">
+              @if (invalid('email')) { <small>Revisa el correo.</small> }
+            </label>
+            <label class="field">
+              <span>Sector *</span>
+              <select formControlName="sector" [attr.aria-invalid]="invalid('sector')">
+                <option value="" disabled>Selecciona tu sector</option>
+                @for (s of sectors; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
+              </select>
+              @if (invalid('sector')) { <small>Elige un sector.</small> }
+            </label>
+            <label class="field">
+              <span>Presupuesto aproximado</span>
+              <select formControlName="budget">
+                @for (b of budgets; track b.value) { <option [value]="b.value">{{ b.label }}</option> }
+              </select>
+            </label>
+            <label class="field field--wide">
+              <span>¿Qué quieres resolver? *</span>
+              <textarea formControlName="need" rows="4" placeholder="Ej.: llevamos los pedidos por WhatsApp y Excel y se nos pierden." [attr.aria-invalid]="invalid('need')"></textarea>
+              @if (invalid('need')) { <small>Cuéntanos un poco más (mínimo 15 caracteres).</small> }
+            </label>
+          </div>
+
+          <label class="trap" aria-hidden="true">Sitio web <input formControlName="website" tabindex="-1" autocomplete="off"></label>
+
+          <label class="consent">
+            <input type="checkbox" formControlName="dataConsent">
+            <span>Autorizo a DABLIU SOLUCIONES a tratar mis datos para responder esta solicitud, según la Ley 1581 de 2012. *</span>
+          </label>
+          @if (invalid('dataConsent')) { <small class="consent__err">Necesitamos tu autorización para contactarte.</small> }
+
+          @if (status() === 'error') {
+            <div class="alert" role="alert">
+              <p>No pudimos enviar tu solicitud en este momento. Puedes enviarla por WhatsApp con los mismos datos.</p>
+              <a class="btn btn--ghost" [href]="whatsappUrl()" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+            </div>
+          }
+
+          <button class="btn btn--primary submit" type="submit" [disabled]="status() === 'sending'">
+            {{ status() === 'sending' ? 'Enviando…' : 'Solicitar diagnóstico gratuito' }}
+          </button>
+        </form>
+      }
+    </div>
+  </div>
+</section>

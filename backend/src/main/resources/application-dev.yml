@@ -1,0 +1,7 @@
+# Perfil de desarrollo local. Activar con: SPRING_PROFILES_ACTIVE=dev
+# No usar estos valores en producción.
+dabliu:
+  admin:
+    password: ${ADMIN_PASSWORD:dabliu-dev}
+  rate-limit:
+    max-requests: ${RATE_LIMIT_MAX:50}
