@@ -36,34 +36,40 @@ src/
 └─ app/
    ├─ app.ts                   ← componente raíz: ordena las secciones
    ├─ core/
-   │  ├─ contact.ts            ← datos de contacto y redes
+   │  ├─ contact.ts            ← WhatsApp, correo, redes, NIT y fundador
+   │  ├─ api.ts                ← URL de la API (sale de src/environments/)
+   │  ├─ diagnostic.service.ts ← envío del formulario a la API
+   │  ├─ lead-intent.service.ts← recuerda el sector elegido para el formulario
    │  └─ directives/reveal.directive.ts  ← animación de entrada al hacer scroll
-   ├─ shared/scene-3d/
-   │  ├─ scene-3d.ts           ← componente que muestra una escena 3D
-   │  └─ build-scene.ts        ← construcción de la escena con Three.js
+   ├─ shared/
+   │  ├─ icons.ts              ← trazos SVG compartidos
+   │  └─ scene-3d/             ← escena 3D del hero (Three.js, carga diferida)
    ├─ layout/
-   │  ├─ navbar/               ← menú fijo con efecto vidrio y menú hamburguesa
+   │  ├─ navbar/               ← menú fijo y menú hamburguesa
+   │  ├─ whatsapp-fab/         ← botón flotante de WhatsApp
    │  └─ footer/
    └─ sections/
-      ├─ hero/                 ← título principal + objeto 3D
-      ├─ problem/              ← problemas que resolvemos
-      ├─ services/             ← 7 servicios con efecto 3D al pasar el mouse
-      ├─ process/              ← cómo trabajamos (línea con partículas)
-      ├─ project/              ← MoviFY
-      ├─ technologies/         ← ecosistema de capacidades
-      ├─ why/                  ← ¿por qué DABLIU?
-      └─ cta/                  ← llamado a la acción con 3D de fondo
-public/                        ← logo y favicon
+      ├─ hero/                 ← propuesta de valor + 3D (solo en escritorio)
+      ├─ sectors/              ← "¿Te pasa esto?": problemas por sector
+      ├─ services/             ← 3 líneas de servicio
+      ├─ project/              ← caso de estudio MoviFY
+      ├─ process/              ← cómo trabajamos
+      ├─ offer/                ← franja del diagnóstico gratuito
+      ├─ about/                ← Nosotros
+      ├─ faq/                  ← preguntas frecuentes
+      └─ cta/                  ← formulario de diagnóstico
+src/environments/              ← URL de la API en desarrollo y producción
+public/                        ← logo, favicon, robots.txt y politica-de-datos.html
 ```
 
 Cada sección es un **componente standalone** independiente: puedes moverla, quitarla o reutilizarla sin tocar las demás.
 
 ## 5. Decisiones técnicas
 
-- **Three.js se carga de forma diferida** (`import()` dinámico). La página inicial pesa unos 65 kB comprimidos y el 3D se descarga solo cuando hace falta.
+- **Three.js se carga de forma diferida** (`import()` dinámico) y **solo en escritorio**. En celular o con ahorro de datos se muestra un brillo en CSS. La página inicial pesa unos 87 kB comprimidos.
 - **La animación 3D corre fuera de Angular** (`NgZone.runOutsideAngular`), así cada cuadro no dispara detección de cambios.
 - Las escenas **se pausan** cuando no están en pantalla o la pestaña está oculta, y **liberan memoria** al destruirse.
-- Se usan **signals** (`signal`, `computed`) para el estado: menú abierto, detalle de MoviFY y nodo activo.
+- Se usan **signals** para el estado: menú abierto, sector elegido y estado del formulario.
 - Si el usuario activó **"reducir movimiento"** en su sistema, las animaciones se desactivan.
 - Si el navegador no tiene WebGL, se muestra un brillo de respaldo hecho con CSS.
 
@@ -73,6 +79,6 @@ Cada sección es un **componente standalone** independiente: puedes moverla, qui
 npm run build
 ```
 
-El resultado queda en `dist/dabliu-web/browser`. Esa carpeta se puede subir a **Netlify** (arrastrándola a Netlify Drop) o a **Vercel** conectando el repositorio de GitHub. Las dos opciones tienen plan gratuito.
+Antes de publicar, pon la URL de la API en `src/environments/environment.ts`. El resultado queda en `dist/dabliu-web/browser`. Esa carpeta se puede subir a **Netlify** (arrastrándola a Netlify Drop) o a **Vercel** conectando el repositorio de GitHub. Las dos opciones tienen plan gratuito.
 
 > Nota: `npm run build` necesita internet, porque incrusta las fuentes de Google en el resultado.

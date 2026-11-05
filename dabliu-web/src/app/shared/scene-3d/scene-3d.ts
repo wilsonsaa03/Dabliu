@@ -4,7 +4,7 @@ import { ThemeService } from '../../core/theme.service';
 
 /**
  * Componente reutilizable que dibuja una escena 3D.
- * Uso: <app-scene-3d variant="hero" />  o  <app-scene-3d variant="cta" />
+ * Uso: <app-scene-3d variant="hero" />
  *
  * Decisiones:
  * - Three.js se importa de forma dinámica: solo se descarga cuando la escena se acerca a la pantalla.
@@ -80,6 +80,15 @@ export class Scene3d implements OnDestroy {
     const onPointer = (e: PointerEvent) => handle.setPointer(e.clientX / window.innerWidth - 0.5, e.clientY / window.innerHeight - 0.5);
     window.addEventListener('pointermove', onPointer, { passive: true });
     this.cleanup.push(() => window.removeEventListener('pointermove', onPointer));
+
+    // Scroll: progreso de salida del hero (0 arriba, 1 cuando ya salió). La escena lo usa para mover la cámara.
+    const onScroll = () => {
+      const r = hostEl.getBoundingClientRect();
+      handle.setScroll((window.innerHeight * 0.15 - r.top) / Math.max(1, r.height + window.innerHeight * 0.15));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    this.cleanup.push(() => window.removeEventListener('scroll', onScroll));
 
     let inView = false;
     const vis = new IntersectionObserver((entries) => {

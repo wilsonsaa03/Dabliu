@@ -13,11 +13,14 @@ import org.springframework.validation.annotation.Validated;
 /** Configuración propia de la API (prefijo "dabliu" en application.yml). */
 @Validated
 @ConfigurationProperties("dabliu")
-public record DabliuProperties(@Valid Cors cors, @Valid Admin admin, @Valid RateLimit rateLimit) {
+public record DabliuProperties(@Valid Cors cors, @Valid Admin admin, @Valid RateLimit rateLimit, Notifications notifications) {
 
     public record Cors(@NotEmpty List<String> allowedOrigins) {}
 
     public record Admin(@NotBlank String username, @NotBlank String password) {}
 
     public record RateLimit(@Min(1) int maxRequests, @NotNull Duration window) {}
+
+    /** Aviso por correo de solicitudes nuevas. Vacío = desactivado. */
+    public record Notifications(String emailTo, String emailFrom) {}
 }

@@ -3,6 +3,7 @@ package co.dabliu.api.diagnostic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.dabliu.api.diagnostic.dto.CreateDiagnosticRequest;
@@ -10,13 +11,15 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 class DiagnosticRequestServiceTest {
 
     private final DiagnosticRequestRepository repository = mock(DiagnosticRequestRepository.class);
     private final Instant now = Instant.parse("2026-10-30T15:00:00Z");
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final DiagnosticRequestService service =
-        new DiagnosticRequestService(repository, Clock.fixed(now, ZoneOffset.UTC));
+        new DiagnosticRequestService(repository, Clock.fixed(now, ZoneOffset.UTC), events);
 
     @Test
     void normalizesInputAndRecordsConsent() {
@@ -35,5 +38,6 @@ class DiagnosticRequestServiceTest {
         assertThat(saved.isDataConsent()).isTrue();
         assertThat(saved.getConsentAcceptedAt()).isEqualTo(now);
         assertThat(saved.getStatus()).isEqualTo(DiagnosticStatus.NEW);
+        verify(events).publishEvent(DiagnosticRequestCreatedEvent.of(saved));
     }
 }

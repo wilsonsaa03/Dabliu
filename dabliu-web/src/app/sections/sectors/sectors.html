@@ -1,39 +1,81 @@
-<section class="band" id="sectores">
+<section class="band band--alt" id="sectores">
   <div class="wrap">
-    <div class="head" appReveal>
-      <span class="eyebrow">Sectores</span>
-      <h2 class="h2">Entendemos tu sector antes de escribir código.</h2>
-      <p class="lead">Empezamos por los negocios donde la tecnología resuelve problemas diarios y concretos.</p>
+    <div class="head head--row" appReveal>
+      <div>
+        <span class="eyebrow">Sectores</span>
+        <h2 class="h2">Soluciones pensadas para <span class="grad">tu tipo de negocio</span></h2>
+      </div>
+      <p class="lead">Conocemos los problemas de cada sector y llegamos con ideas concretas desde la primera conversación.</p>
     </div>
 
     <div class="secs">
-      @for (s of sectors; track s.title) {
-        <article class="sec" appReveal>
-          <span class="sec__ic">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="s.icon"/></svg>
-          </span>
-          <h3>{{ s.title }}</h3>
-
-          <div>
-            <span class="sec__k">El problema</span>
-            <p>{{ s.problem }}</p>
+      @for (s of sectors; track s.sector; let i = $index) {
+        <article class="sec" [class.sec--featured]="s.proof" appSurface="tilt" appReveal [revealDelay]="i * 110">
+          <!-- Ilustración vectorial propia del sector (viewBox fijo, escala sin recortes) -->
+          <div class="sec__art" aria-hidden="true">
+            @switch (s.art) {
+              @case ('transport') {
+                <svg viewBox="0 0 240 120">
+                  <path class="a-grid" d="M0 30H240M0 60H240M0 90H240M40 0V120M100 0V120M160 0V120M220 0V120"/>
+                  <path class="a-route-base" d="M24 96C60 96 64 60 100 60S150 26 200 26"/>
+                  <path id="sec-route" class="a-route" d="M24 96C60 96 64 60 100 60S150 26 200 26" pathLength="1"/>
+                  <circle class="a-dot" cx="24" cy="96" r="6"/>
+                  <g class="a-pin" transform="translate(200 26)"><path d="M0 0c-8-9-12-14-12-20a12 12 0 0124 0c0 6-4 11-12 20z"/><circle cy="-20" r="4.5"/></g>
+                  <g class="a-mover"><rect x="-10" y="-6" width="20" height="12" rx="3"/><circle cx="-5" cy="7" r="2.5"/><circle cx="5" cy="7" r="2.5"/>
+                    <animateMotion dur="5s" repeatCount="indefinite" rotate="auto"><mpath href="#sec-route"/></animateMotion>
+                  </g>
+                </svg>
+              }
+              @case ('commerce') {
+                <svg viewBox="0 0 240 120">
+                  <path class="a-line" d="M30 50h80v56H30zM24 50l8-20h76l8 20M24 50c0 8 13 8 13 0 0 8 13 8 13 0 0 8 13 8 13 0 0 8 13 8 13 0 0 8 13 8 13 0 0 8 13 8 13 0M58 106V78h24v28"/>
+                  <g class="a-bars"><rect x="140" y="70" width="14" height="36" rx="3"/><rect x="162" y="56" width="14" height="50" rx="3"/><rect x="184" y="40" width="14" height="66" rx="3"/><rect x="206" y="24" width="14" height="82" rx="3"/></g>
+                  <path class="a-trend" d="M138 60l26-18 22 6 34-30" pathLength="1"/>
+                </svg>
+              }
+              @case ('auto') {
+                <svg viewBox="0 0 240 120">
+                  <path class="a-line" d="M20 84v-14l14-26h76l18 26h14a8 8 0 018 8v6zM44 44v26M80 44v26M20 70h130"/>
+                  <circle class="a-line" cx="46" cy="86" r="11"/><circle class="a-line" cx="118" cy="86" r="11"/>
+                  <g class="a-gear" transform="translate(196 52)">
+                    <path d="M0-26v8M0 18v8M-26 0h8M18 0h8M-18-18l6 6M12 12l6 6M-18 18l6-6M12-12l6-6"/>
+                    <circle r="15"/><circle r="6"/>
+                  </g>
+                </svg>
+              }
+              @default {
+                <svg viewBox="0 0 240 120">
+                  <path class="a-link" d="M60 60L120 30M60 60l60 30M120 30l60 30M120 90l60-30M120 30v60"/>
+                  @for (n of nodes; track n.x + '-' + n.y; let k = $index) {
+                    <g class="a-node" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'" [style.--k]="k"><rect x="-14" y="-14" width="28" height="28" rx="8"/><circle r="4"/></g>
+                  }
+                </svg>
+              }
+            }
           </div>
 
-          <div>
-            <span class="sec__k">Lo que construimos</span>
-            <ul>
-              @for (b of s.builds; track b) { <li>{{ b }}</li> }
-            </ul>
+          @if (s.proof) { <span class="sec__flag">Aplicado en MoviFY</span> }
+          <div class="sec__head">
+            <span class="sec__ic ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="s.icon" pathLength="1"/></svg>
+            </span>
+            <h3>{{ s.title }}</h3>
           </div>
+
+          <p class="sec__prob">{{ s.problem }}</p>
+
+          <ul aria-label="Lo que construimos">
+            @for (b of s.builds; track b; let j = $index) { <li [style.--j]="j">{{ b }}</li> }
+          </ul>
 
           <div class="sec__foot">
-            @if (s.proof) { <a class="sec__proof" [href]="s.proof.href">{{ s.proof.label }} →</a> }
-            <a class="sec__cta" href="#contacto">Solicitar diagnóstico gratuito</a>
+            <a class="sec__cta" href="#contacto" (click)="choose(s.sector)">{{ s.cta }}
+              <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="arrowRight"/></svg>
+            </a>
+            @if (s.proof) { <a class="sec__proof link-u" [href]="s.proof.href">{{ s.proof.label }}</a> }
           </div>
         </article>
       }
     </div>
-
-    <p class="other" appReveal>¿Tu negocio es de otro sector? <a href="#contacto">Cuéntanos qué necesitas.</a></p>
   </div>
 </section>

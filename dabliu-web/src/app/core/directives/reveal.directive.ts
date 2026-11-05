@@ -1,20 +1,28 @@
-import { Directive, ElementRef, OnDestroy, afterNextRender, inject } from '@angular/core';
+import { Directive, ElementRef, OnDestroy, afterNextRender, inject, input } from '@angular/core';
 
 /**
- * Añade un pequeño desplazamiento de entrada cuando el elemento aparece en pantalla.
- * Uso: <div appReveal>...</div>
- * Si el usuario pidió "reducir movimiento", no hace nada.
+ * Entrada suave cuando el elemento aparece en pantalla (una sola vez).
+ * Uso: <div appReveal>  ·  con retraso para escalonar: <li appReveal [revealDelay]="i * 80">
+ *
+ * - Solo oculta lo que está debajo del primer pantallazo: lo visible al cargar no espera.
+ * - Si el usuario pidió "reducir movimiento" o no hay IntersectionObserver, no hace nada.
+ * - Usa la propiedad CSS "translate", así no interfiere con los hover de las tarjetas.
  */
 @Directive({
   selector: '[appReveal]',
-  host: { class: 'rv' },
+  host: {
+    class: 'rv',
+    '[style.--rv-d]': 'revealDelay() + "ms"',
+  },
 })
 export class RevealDirective implements OnDestroy {
+  /** Retraso en milisegundos (para animaciones escalonadas). */
+  readonly revealDelay = input(0);
+
   private el = inject(ElementRef<HTMLElement>);
   private observer?: IntersectionObserver;
 
   constructor() {
-    // afterNextRender se ejecuta solo en el navegador, después de pintar el componente.
     afterNextRender(() => {
       const node = this.el.nativeElement as HTMLElement;
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -23,13 +31,14 @@ export class RevealDirective implements OnDestroy {
 
       node.classList.add('rv--wait');
       this.observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            node.classList.remove('rv--wait');
-            this.observer?.disconnect();
-          }
+        ([entry]) => {
+          // Se revela en cuanto entra en pantalla. Sin márgenes negativos a propósito:
+          // así no falla con scroll rápido ni con lo último de la página (que nunca sube más).
+          if (!entry.isIntersecting) return;
+          node.classList.remove('rv--wait');
+          node.classList.add('rv--in');
+          this.observer?.disconnect();
         },
-        { rootMargin: '0px 0px -8% 0px' },
       );
       this.observer.observe(node);
     });

@@ -68,6 +68,10 @@ Estados: `NEW` → `CONTACTED` → `SCHEDULED` → `COMPLETED`, o `DISCARDED`.
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:4200` | Dominios de la landing, separados por coma |
 | `RATE_LIMIT_MAX` | `5` (`50` en `dev`) | Solicitudes públicas por IP en cada ventana |
 | `RATE_LIMIT_WINDOW` | `10m` | Duración de la ventana |
+| `FORWARD_HEADERS_STRATEGY` | `native` | Toma la IP real del visitante detrás de un proxy interno (necesario para el límite por IP) |
+| `NOTIFY_EMAIL_TO` | vacío | Correo que recibe el aviso de cada solicitud nueva (vacío = sin aviso) |
+| `NOTIFY_EMAIL_FROM` | vacío | Remitente del aviso (algunos SMTP lo exigen) |
+| `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | — | SMTP para el aviso (p. ej. Gmail con contraseña de aplicación, o el SMTP de tu dominio) |
 | `PORT` | `8080` | |
 
 ## Ejecutar en local

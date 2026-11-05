@@ -1,6 +1,4 @@
 <section class="cta band--alt" id="contacto">
-  <app-scene-3d variant="cta" />
-
   <div class="wrap cta__in">
     <div class="cta__copy" appReveal>
       <span class="eyebrow">Diagnóstico tecnológico gratuito</span>
@@ -16,8 +14,12 @@
       <p class="price"><b>$0 COP</b><span>30 minutos · sin compromiso</span></p>
 
       <div class="cta__contact">
-        <a [href]="contact.whatsappUrl" target="_blank" rel="noopener">WhatsApp {{ contact.whatsappLabel }}</a>
-        <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+        <p>¿Prefieres escribirnos directamente?</p>
+        <a class="btn btn--wa" [href]="contact.whatsappChatUrl" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="waIcon"/></svg>
+          WhatsApp {{ contact.whatsappLabel }}
+        </a>
+        <a class="mail" [href]="'mailto:' + contact.email">{{ contact.email }}</a>
       </div>
     </div>
 
@@ -25,75 +27,104 @@
       @if (status() === 'sent') {
         <div class="done" role="status">
           <span class="done__ic" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1"/></svg>
           </span>
           <h3>¡Solicitud recibida!</h3>
-          <p>Una persona del equipo lee tu solicitud y te escribe para agendar el diagnóstico.</p>
+          <p>Una persona del equipo lee tu solicitud y te escribe por WhatsApp para agendar el diagnóstico.</p>
           <button class="btn btn--ghost" type="button" (click)="reset()">Enviar otra solicitud</button>
         </div>
       } @else {
         <form #formEl [formGroup]="form" (ngSubmit)="submit(formEl)" novalidate>
           <h3>Solicita tu diagnóstico</h3>
-          <p class="panel__note">Una persona del equipo lee cada solicitud.</p>
+          <p class="panel__note">Toma menos de un minuto. Los campos con * son obligatorios.</p>
 
           <div class="grid">
-            <label class="field">
-              <span>Nombre *</span>
-              <input formControlName="fullName" autocomplete="name" [attr.aria-invalid]="invalid('fullName')">
-              @if (invalid('fullName')) { <small>Escribe tu nombre.</small> }
-            </label>
-            <label class="field">
-              <span>Empresa o negocio</span>
-              <input formControlName="company" autocomplete="organization">
-            </label>
-            <label class="field">
-              <span>WhatsApp o teléfono *</span>
-              <input formControlName="phone" type="tel" autocomplete="tel" inputmode="tel" [attr.aria-invalid]="invalid('phone')">
-              @if (invalid('phone')) { <small>Escribe un número válido.</small> }
-            </label>
-            <label class="field">
-              <span>Correo</span>
-              <input formControlName="email" type="email" autocomplete="email" [attr.aria-invalid]="invalid('email')">
-              @if (invalid('email')) { <small>Revisa el correo.</small> }
-            </label>
-            <label class="field">
-              <span>Sector *</span>
-              <select formControlName="sector" [attr.aria-invalid]="invalid('sector')">
-                <option value="" disabled>Selecciona tu sector</option>
-                @for (s of sectors; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
-              </select>
-              @if (invalid('sector')) { <small>Elige un sector.</small> }
-            </label>
-            <label class="field">
-              <span>Presupuesto aproximado</span>
-              <select formControlName="budget">
-                @for (b of budgets; track b.value) { <option [value]="b.value">{{ b.label }}</option> }
-              </select>
-            </label>
-            <label class="field field--wide">
-              <span>¿Qué quieres resolver? *</span>
-              <textarea formControlName="need" rows="4" placeholder="Ej.: llevamos los pedidos por WhatsApp y Excel y se nos pierden." [attr.aria-invalid]="invalid('need')"></textarea>
-              @if (invalid('need')) { <small>Cuéntanos un poco más (mínimo 15 caracteres).</small> }
-            </label>
+            <div class="field" [class.is-valid]="valid('fullName')" [class.is-invalid]="invalid('fullName')">
+              <label for="f-name">Nombre *</label>
+              <div class="control">
+                <input id="f-name" formControlName="fullName" autocomplete="name" aria-required="true"
+                       [attr.aria-invalid]="invalid('fullName')" [attr.aria-describedby]="invalid('fullName') ? 'e-name' : null">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1"/></svg>
+              </div>
+              @if (invalid('fullName')) { <small id="e-name">Escribe tu nombre.</small> }
+            </div>
+            <div class="field" [class.is-valid]="valid('phone')" [class.is-invalid]="invalid('phone')">
+              <label for="f-phone">WhatsApp o teléfono *</label>
+              <div class="control">
+                <input id="f-phone" formControlName="phone" type="tel" autocomplete="tel" inputmode="tel" aria-required="true"
+                       [attr.aria-invalid]="invalid('phone')" [attr.aria-describedby]="invalid('phone') ? 'e-phone' : null">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1"/></svg>
+              </div>
+              @if (invalid('phone')) { <small id="e-phone">Escribe un número válido.</small> }
+            </div>
+
+            <fieldset class="field field--wide" [class.is-invalid]="invalid('sector')" [attr.aria-describedby]="invalid('sector') ? 'e-sector' : null">
+              <legend>¿A qué se dedica tu negocio? *</legend>
+              <div class="chips">
+                @for (s of sectors; track s.value) {
+                  <label class="chip">
+                    <input type="radio" formControlName="sector" [value]="s.value">
+                    <span>{{ s.label }}</span>
+                  </label>
+                }
+              </div>
+              @if (invalid('sector')) { <small id="e-sector">Elige una opción.</small> }
+            </fieldset>
+
+            <div class="field field--wide" [class.is-valid]="valid('need')" [class.is-invalid]="invalid('need')">
+              <label for="f-need">¿Qué quieres resolver? *</label>
+              <textarea id="f-need" formControlName="need" rows="4" aria-required="true"
+                        placeholder="Ej.: llevamos los pedidos por WhatsApp y Excel y se nos pierden."
+                        [attr.aria-invalid]="invalid('need')" [attr.aria-describedby]="invalid('need') ? 'e-need' : null"></textarea>
+              <div class="field__meta">
+                @if (invalid('need')) { <small id="e-need">Cuéntanos un poco más (mínimo 15 caracteres).</small> }
+                <span class="count" aria-hidden="true">{{ form.controls.need.value.length }}/1500</span>
+              </div>
+            </div>
+
+            <div class="field" [class.is-valid]="valid('company')">
+              <label for="f-company">Empresa o negocio <i>(opcional)</i></label>
+              <div class="control">
+                <input id="f-company" formControlName="company" autocomplete="organization">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1"/></svg>
+              </div>
+            </div>
+            <div class="field" [class.is-valid]="valid('email')" [class.is-invalid]="invalid('email')">
+              <label for="f-email">Correo <i>(opcional)</i></label>
+              <div class="control">
+                <input id="f-email" formControlName="email" type="email" autocomplete="email"
+                       [attr.aria-invalid]="invalid('email')" [attr.aria-describedby]="invalid('email') ? 'e-email' : null">
+                <svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1"/></svg>
+              </div>
+              @if (invalid('email')) { <small id="e-email">Revisa el correo.</small> }
+            </div>
           </div>
 
           <label class="trap" aria-hidden="true">Sitio web <input formControlName="website" tabindex="-1" autocomplete="off"></label>
 
-          <label class="consent">
-            <input type="checkbox" formControlName="dataConsent">
-            <span>Autorizo a DABLIU SOLUCIONES a tratar mis datos para responder esta solicitud, según la Ley 1581 de 2012. *</span>
+          <label class="consent" [class.is-invalid]="invalid('dataConsent')">
+            <input type="checkbox" formControlName="dataConsent" aria-required="true"
+                   [attr.aria-describedby]="invalid('dataConsent') ? 'e-consent' : null">
+            <span>Autorizo a {{ company.name }} a tratar mis datos para responder esta solicitud, según la Ley 1581 de 2012 y la
+              <a [href]="company.privacyPolicyUrl" target="_blank" rel="noopener">política de tratamiento de datos</a>. *</span>
           </label>
-          @if (invalid('dataConsent')) { <small class="consent__err">Necesitamos tu autorización para contactarte.</small> }
+          @if (invalid('dataConsent')) { <small class="consent__err" id="e-consent">Necesitamos tu autorización para contactarte.</small> }
 
           @if (status() === 'error') {
             <div class="alert" role="alert">
               <p>No pudimos enviar tu solicitud en este momento. Puedes enviarla por WhatsApp con los mismos datos.</p>
-              <a class="btn btn--ghost" [href]="whatsappUrl()" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+              <a class="btn btn--wa" [href]="whatsappUrl()" target="_blank" rel="noopener">Enviar por WhatsApp</a>
             </div>
           }
 
-          <button class="btn btn--primary submit" type="submit" [disabled]="status() === 'sending'">
-            {{ status() === 'sending' ? 'Enviando…' : 'Solicitar diagnóstico gratuito' }}
+          <button class="btn btn--primary submit" type="submit" [class.is-loading]="status() === 'sending'"
+                  [disabled]="status() === 'sending'" [attr.aria-busy]="status() === 'sending'">
+            @if (status() === 'sending') {
+              <span class="spinner" aria-hidden="true"></span> Enviando…
+            } @else {
+              Solicitar diagnóstico gratuito
+              <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            }
           </button>
         </form>
       }

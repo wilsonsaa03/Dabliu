@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,12 @@ public class DiagnosticRequestService {
 
     private final DiagnosticRequestRepository repository;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
-    public DiagnosticRequestService(DiagnosticRequestRepository repository, Clock clock) {
+    public DiagnosticRequestService(DiagnosticRequestRepository repository, Clock clock, ApplicationEventPublisher events) {
         this.repository = repository;
         this.clock = clock;
+        this.events = events;
     }
 
     @Transactional
@@ -43,6 +46,7 @@ public class DiagnosticRequestService {
         DiagnosticRequest saved = repository.save(request);
         // Solo el id y el sector: los datos personales no van a los logs.
         log.info("Nueva solicitud de diagnóstico {} (sector {})", saved.getId(), saved.getSector());
+        events.publishEvent(DiagnosticRequestCreatedEvent.of(saved));
         return saved;
     }
 

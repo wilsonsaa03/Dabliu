@@ -1,48 +1,71 @@
 :host { display: block; }
 
-.flow { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.pr { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 2fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+.pr__copy { display: flex; flex-direction: column; gap: 16px; .h2 { font-size: clamp(1.7rem, 3vw, 2.5rem); } .btn { align-self: flex-start; } }
 
-/* Línea que une los nodos + partículas de luz que la recorren */
+.flow { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+
+/* Línea de progreso: base tenue + relleno luminoso que avanza al entrar en pantalla */
 .flow__track {
-  position: absolute; left: calc(100% / 12); right: calc(100% / 12); top: 31px; height: 2px;
-  background: linear-gradient(90deg, rgba(43, 107, 255, 0.2), rgba(69, 220, 255, 0.6), rgba(43, 107, 255, 0.2));
-  i {
-    position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
-    background: #dff8ff; box-shadow: 0 0 14px 3px var(--cyan), 0 0 30px 6px rgba(43, 107, 255, 0.6);
-    animation: travel 7s linear infinite;
-    &:nth-child(2) { animation-delay: -2.33s; }
-    &:nth-child(3) { animation-delay: -4.66s; }
+  position: absolute; left: calc(100% / 12); right: calc(100% / 12); top: 29px; height: 2px;
+  background: var(--line); border-radius: 2px;
+}
+.flow__fill {
+  position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  box-shadow: 0 0 10px var(--cyan);
+  transform-origin: left; transition: scale 1.8s var(--ease-out) 0.15s;
+  /* destello que recorre la línea */
+  &::after {
+    content: ''; position: absolute; top: -3px; left: 0; width: 40px; height: 8px; border-radius: 4px;
+    background: radial-gradient(closest-side, #fff, transparent); animation: spark 3.6s var(--ease) 2s infinite;
   }
 }
-@keyframes travel { 0% { left: 0; opacity: 0; } 6% { opacity: 1; } 94% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
-@keyframes travelv { 0% { top: 0; opacity: 0; } 6% { opacity: 1; } 94% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes spark { from { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { left: calc(100% - 40px); opacity: 0; } }
+.flow__track.rv--wait .flow__fill { scale: 0 1; }
 
 .step {
-  display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
-  h3 { font-size: 17px; font-weight: 600; }
-  p { font-size: 14px; color: var(--fg-3); max-width: 22ch; margin-inline: auto; }
-  &:hover .step__node { transform: scale(1.08); }
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  h3 { font-size: 15.5px; font-weight: 700; }
+  p { font-size: 13px; color: var(--fg-3); max-width: 20ch; margin: 2px auto 0; }
+  @media (hover: hover) { &:hover .step__node { transform: translateY(-4px) scale(1.06); } }
 }
+.step__n { display: block; font-family: var(--f-display); font-size: 20px; font-weight: 800; color: var(--cyan); line-height: 1.1; }
 .step__node {
-  position: relative; z-index: 1; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
-  font-family: var(--f-mono); font-weight: 500; font-size: 15px; color: #fff;
-  background: var(--step-node);
-  border: 1px solid rgba(110, 190, 255, 0.45);
-  box-shadow: 0 0 0 6px var(--bg-2), 0 0 28px -4px rgba(43, 107, 255, 0.9);
-  transition: transform 0.35s;
+  position: relative; z-index: 1; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
+  color: #fff; background: var(--step-node); border: 1px solid var(--line-strong);
+  box-shadow: 0 0 0 6px var(--bg), 0 0 30px -6px var(--shadow-blue);
+  transition: transform 0.35s var(--ease), background 0.5s ease calc(var(--rv-d, 0ms) + 250ms), color 0.5s ease calc(var(--rv-d, 0ms) + 250ms), border-color 0.5s ease calc(var(--rv-d, 0ms) + 250ms);
+  svg { width: 26px; height: 26px; }
+  path { stroke-dasharray: 1; }
+  &::after { content: ''; position: absolute; inset: -1px; border-radius: 50%; border: 2px solid var(--cyan); opacity: 0; pointer-events: none; }
 }
+.step.rv--in .step__node path { animation: draw 0.9s var(--ease-out) calc(var(--rv-d, 0ms) + 250ms) both; }
+/* Antes de activarse la etapa se ve apagada */
+.step.rv--wait .step__node { background: var(--bg-2); color: var(--fg-3); border-color: var(--line); }
+.step.rv--in .step__node::after { animation: node-ping 1.2s ease-out calc(var(--rv-d, 0ms) + 300ms) 1; }
+@keyframes node-ping { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.7); } }
 
+@media (max-width: 1280px) { .pr { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 900px) {
-  .flow { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .flow__track {
-    left: 31px; right: auto; top: 32px; bottom: 32px; width: 2px; height: auto;
-    background: linear-gradient(180deg, rgba(43, 107, 255, 0.2), rgba(69, 220, 255, 0.6), rgba(43, 107, 255, 0.2));
-    i { left: 50%; animation-name: travelv; }
-  }
+  .flow { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .flow__track { left: 29px; right: auto; top: 30px; bottom: 30px; width: 2px; height: auto; }
+  .flow__fill { transform-origin: top; transition-duration: 2.4s; &::after { display: none; } }
+  .flow__track.rv--wait .flow__fill { scale: 1 0; }
+  /* En celular cada etapa aparece cuando llega a pantalla, sin esperar a las anteriores */
+  .step { --rv-d: 0ms !important; }
   .step {
-    flex-direction: row; align-items: flex-start; gap: 20px; text-align: left;
-    > div { padding-top: 8px; }
+    flex-direction: row; align-items: flex-start; gap: 18px; text-align: left;
+    > div { padding-top: 4px; }
     p { max-width: none; margin: 4px 0 0; }
   }
   .step__node { flex: none; }
+}
+
+/* Si el navegador lo soporta, en celular la línea avanza al ritmo del scroll */
+@supports (animation-timeline: view()) {
+  @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+    .flow__fill { animation: fill-y linear both; animation-timeline: view(); animation-range: entry 30% cover 70%; }
+  }
+  @keyframes fill-y { from { scale: 1 0; } to { scale: 1 1; } }
 }

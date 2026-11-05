@@ -1,20 +1,27 @@
 <header class="nav">
   <div class="wrap nav__in">
-    <a class="brand" href="#inicio" aria-label="DABLIU Soluciones, inicio">
+    <a class="brand" href="#inicio" aria-label="DABLIU Soluciones, ir al inicio" (click)="closeMenu()">
       <img src="logo-dabliu.png" alt="" width="40" height="40">
       <span><b>DABLIU</b><small>SOLUCIONES</small></span>
     </a>
 
     <nav aria-label="Principal">
       <ul class="menu" id="menu" [class.is-open]="menuOpen()">
-        @for (link of links; track link.href) {
-          <li><a [href]="link.href" (click)="closeMenu()">{{ link.label }}</a></li>
+        @for (link of links; track link.href; let i = $index) {
+          <li [style.--i]="i">
+            <a [href]="link.href" (click)="closeMenu()"
+               [class.is-active]="active() === link.href"
+               [attr.aria-current]="active() === link.href ? 'true' : null">{{ link.label }}</a>
+          </li>
         }
-        <li class="menu__cta"><a class="btn btn--primary" href="#contacto" (click)="closeMenu()">Solicitar diagnóstico gratuito</a></li>
+        <li class="menu__cta" [style.--i]="links.length"><a class="btn btn--primary" href="#contacto" (click)="closeMenu()">Solicitar diagnóstico gratuito</a></li>
       </ul>
     </nav>
 
-    <a class="btn btn--primary nav__cta" href="#contacto">Diagnóstico gratuito</a>
+    <a class="btn btn--primary btn--glow btn--sm nav__cta" href="#contacto">
+      Diagnóstico gratuito
+      <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
 
     <button class="icon-btn theme-btn" type="button" (click)="themes.toggle()"
             [attr.aria-label]="themes.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
@@ -29,11 +36,8 @@
     <button class="icon-btn burger" type="button" (click)="toggleMenu()"
             [attr.aria-expanded]="menuOpen()" aria-controls="menu"
             [attr.aria-label]="menuOpen() ? 'Cerrar menú' : 'Abrir menú'">
-      @if (menuOpen()) {
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      } @else {
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-      }
+      <span class="burger__lines" aria-hidden="true"><i></i><i></i><i></i></span>
     </button>
   </div>
+  <span class="progress" aria-hidden="true"></span>
 </header>

@@ -1,33 +1,78 @@
 <section class="hero" id="inicio">
   <div class="hero__bg" aria-hidden="true">
-    <div class="hero__glow"></div>
+    <div class="hero__aurora"><i></i><i></i><i></i></div>
     <div class="hero__grid"></div>
+    <div class="hero__beams"><i></i><i></i><i></i></div>
   </div>
 
   <div class="wrap hero__in">
     <div class="hero__copy">
-      <span class="badge"><i></i>SOLUCIONES TECNOLÓGICAS</span>
-      <h1>Transformamos ideas en <span class="grad">soluciones digitales.</span></h1>
-      <p class="lead">Desarrollamos software, aplicaciones y plataformas digitales que ayudan a empresas y emprendimientos a crecer, automatizar procesos y aprovechar la tecnología.</p>
-      <div class="hero__ctas">
-        <a class="btn btn--primary" href="#contacto">
+      <span class="badge enter" style="--d: 0ms"><i></i>Innovación <b>·</b> Desarrollo <b>·</b> Resultados</span>
+      <h1>
+        <span class="ln"><span class="rise" style="--d: 120ms">Transformamos ideas en</span></span>
+        <span class="ln"><span class="rise" style="--d: 220ms">soluciones digitales</span></span>
+        <span class="ln ln--accent">
+          <span class="rise grad" style="--d: 340ms">que impulsan tu negocio</span>
+          <svg class="swoosh" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="hero-swoosh" x1="0" x2="1">
+                <stop offset="0" stop-color="var(--cyan)" stop-opacity="0"/>
+                <stop offset="0.25" stop-color="var(--cyan)"/>
+                <stop offset="1" stop-color="var(--blue)" stop-opacity="0.2"/>
+              </linearGradient>
+            </defs>
+            <path d="M4 18C110 6 260 2 396 10" pathLength="1" stroke="url(#hero-swoosh)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </h1>
+      <p class="lead enter" style="--d: 520ms">En DABLIU SOLUCIONES desarrollamos software, aplicaciones y automatizaciones a la medida de tu empresa: menos tareas manuales, información en orden y un negocio listo para crecer.</p>
+      <div class="hero__ctas enter" style="--d: 640ms">
+        <a class="btn btn--primary btn--glow" href="#contacto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="icons.rocket"/></svg>
           Solicitar diagnóstico gratuito
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="icons.arrowRight"/></svg>
         </a>
-        <a class="btn btn--ghost" href="#proyecto">Ver caso MoviFY</a>
+        <a class="btn btn--ghost" href="#proyecto">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>
+          Conocer nuestros proyectos
+        </a>
       </div>
-      <p class="hero__note">30 minutos · $0 COP · sin compromiso</p>
-      <div class="chips" aria-label="Especialidades">
-        @for (chip of chips; track chip) { <span>{{ chip }}</span> }
-      </div>
+      <ul class="hero__note enter" style="--d: 760ms" aria-label="Condiciones del diagnóstico">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Diagnóstico de 30 minutos</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="icons.shield"/></svg>$0 COP</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="icons.check"/></svg>Sin compromiso</li>
+      </ul>
     </div>
 
     <div class="stage" aria-hidden="true">
-      <div class="stage__fallback"></div>
-      <app-scene-3d variant="hero" />
-      @for (tag of tags; track tag.label) {
-        <span class="tag" [style]="tag.pos"><span class="tag__in">{{ tag.label }}</span></span>
+      <!-- Respaldo y estado de carga: el logo real con brillo. Se desvanece cuando la escena 3D está lista. -->
+      <div class="stage__fallback">
+        <span class="stage__halo"></span>
+        <img src="logo-dabliu.png" alt="" width="256" height="190" decoding="async">
+        <span class="stage__loader"><i></i></span>
+      </div>
+      @if (show3d()) {
+        <app-scene-3d variant="hero" />
+      }
+
+      @for (c of cards; track c.title; let i = $index) {
+        <div class="float" [class]="'float float--' + c.id">
+          <div class="float__in" [style.--d]="(1500 + i * 180) + 'ms'">
+            <span class="float__ic">
+              @if (c.id === 'data') {
+                <svg viewBox="0 0 40 28" class="bars"><rect x="2" y="16" width="6" height="10" rx="1.5"/><rect x="11" y="11" width="6" height="15" rx="1.5"/><rect x="20" y="6" width="6" height="20" rx="1.5"/><rect x="29" y="2" width="6" height="24" rx="1.5"/><path d="M3 13L13 8l9 2 14-8" fill="none" stroke-width="2" stroke-linecap="round" pathLength="1"/></svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="c.icon" pathLength="1"/></svg>
+              }
+            </span>
+            <span class="float__t">{{ c.title }}<small>{{ c.text }}</small></span>
+          </div>
+        </div>
       }
     </div>
   </div>
+
+  <a class="scroll-cue enter" style="--d: 1400ms" href="#desafios" aria-label="Ir a la siguiente sección">
+    <span></span>
+  </a>
 </section>

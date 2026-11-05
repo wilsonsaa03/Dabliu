@@ -1,25 +1,25 @@
 <section class="band" id="servicios">
-  <div class="wrap">
-    <div class="head" appReveal>
-      <span class="eyebrow">Servicios</span>
-      <h2 class="h2">Tecnología diseñada para hacer crecer tu negocio.</h2>
-      <p class="lead">Primero entendemos el problema. Después elegimos la tecnología que mejor lo resuelve.</p>
+  <div class="wrap sv">
+    <div class="sv__copy" appReveal>
+      <span class="eyebrow">Nuestros servicios</span>
+      <h2 class="h2 h2--side">Soluciones tecnológicas para hacer <span class="grad">crecer tu negocio</span></h2>
+      <p class="lead">Desarrollamos software, aplicaciones y plataformas digitales con un enfoque práctico, seguro y escalable. Primero entendemos el problema; después elegimos la tecnología que lo resuelve.</p>
+      <a class="btn btn--primary btn--glow btn--sm" href="#contacto">
+        Cuéntanos qué necesitas
+        <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="arrow"/></svg>
+      </a>
     </div>
 
-    <div class="svcs">
-      @for (s of services; track s.title) {
-        <article class="svc" tabindex="0" appReveal #card
-                 (pointermove)="tilt($event, card)" (pointerleave)="reset(card)">
-          <span class="svc__ic">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path [attr.d]="s.icon"/></svg>
+    <ul class="sv__grid">
+      @for (s of services; track s.title; let i = $index) {
+        <li class="tile" appSurface="tilt" appReveal [revealDelay]="(i % 4) * 90 + (i > 3 ? 120 : 0)">
+          <span class="tile__ic ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="s.icon" pathLength="1"/></svg>
           </span>
           <h3>{{ s.title }}</h3>
           <p>{{ s.text }}</p>
-          <div class="svc__more">
-            @for (e of s.extras; track e) { <span>{{ e }}</span> }
-          </div>
-        </article>
+        </li>
       }
-    </div>
+    </ul>
   </div>
 </section>

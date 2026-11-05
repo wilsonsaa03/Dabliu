@@ -14,9 +14,19 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  # Correo (SMTP) para avisos: se activa solo si defines SPRING_MAIL_HOST, SPRING_MAIL_PORT,
+  # SPRING_MAIL_USERNAME y SPRING_MAIL_PASSWORD como variables de entorno.
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 server:
   port: ${PORT:8080}
+  # Detrás de un proxy (Render, Railway, Nginx...) toma la IP real del visitante desde
+  # X-Forwarded-For, solo si el proxy está en una red interna. Sin esto, el límite por IP
+  # contaría a todos los visitantes como uno solo.
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:native}
   error:
     include-message: never
     include-stacktrace: never
@@ -39,3 +49,7 @@ dabliu:
   rate-limit:
     max-requests: ${RATE_LIMIT_MAX:5}
     window: ${RATE_LIMIT_WINDOW:10m}
+  # Aviso por correo de cada solicitud nueva (requiere también el SMTP de spring.mail).
+  notifications:
+    email-to: ${NOTIFY_EMAIL_TO:}
+    email-from: ${NOTIFY_EMAIL_FROM:}
