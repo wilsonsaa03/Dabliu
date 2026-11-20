@@ -71,7 +71,7 @@ public class DiagnosticRequestService {
         DiagnosticStatus before = request.getStatus();
         request.updateTracking(input.status(), blankToNull(input.internalNotes()));
         activity.record("diagnostic.updated", "DIAGNOSTIC_REQUEST", id,
-            before == input.status() ? "Actualizó las notas de una solicitud" : "Cambió el estado de una solicitud a " + input.status(),
+            before == input.status() ? "Actualizó las notas de una solicitud" : "Cambió el estado de una solicitud a «" + input.status().label() + "»",
             java.util.Map.of("from", before.name(), "to", input.status().name()));
         return request;
     }

@@ -1,0 +1,31 @@
+:host { display: block; min-height: 100vh; }
+
+.skip {
+  position: absolute; left: 12px; top: -80px; z-index: 100; padding: 8px 14px; border-radius: 10px;
+  background: var(--brand); color: #fff; font-weight: 700; text-decoration: none;
+}
+.skip:focus { top: 12px; }
+
+/* En celular el menú es un cajón que entra desde la izquierda */
+.sidebar { transform: translateX(-100%); transition: transform 0.28s var(--ease-snappy); }
+.sidebar.is-open { transform: none; box-shadow: var(--shadow-2); }
+@media (min-width: 1024px) { .sidebar { transform: none; transition: none; } }
+
+.nav-link {
+  position: relative; display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border-radius: 10px;
+  color: var(--fg-2); font-weight: 600; font-size: 13.5px; text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+.nav-link:hover { background: var(--surface-hover); color: var(--fg); }
+.nav-link.is-active { background: var(--brand-soft); color: var(--fg); }
+.nav-link.is-active lucide-icon { color: var(--accent); }
+.nav-link.is-active::before {
+  content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand);
+}
+
+.menu-item {
+  display: flex; width: 100%; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--fg-2); text-decoration: none; background: none; border: none; cursor: pointer;
+}
+.menu-item:hover { background: var(--surface-hover); color: var(--fg); }
+.menu-item.text-danger { color: var(--danger); }

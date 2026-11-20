@@ -1,0 +1,111 @@
+<app-page-header title="Solicitudes web" description="Personas que pidieron el diagnóstico tecnológico gratuito desde la página de DABLIU." />
+
+<!-- Filtros por estado -->
+<div class="mb-4 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filtrar por estado">
+  <button type="button" class="btn btn-sm" [class.btn-secondary]="status() === ''" [class.btn-ghost]="status() !== ''" [attr.aria-pressed]="status() === ''" (click)="filter('')">Todas</button>
+  @for (s of statuses; track s) {
+    <button type="button" class="btn btn-sm" [class.btn-secondary]="status() === s" [class.btn-ghost]="status() !== s" [attr.aria-pressed]="status() === s" (click)="filter(s)">
+      {{ statusLabels[s].label }}
+    </button>
+  }
+</div>
+
+<section class="card overflow-hidden">
+  @if (loading() && !data()) {
+    <app-table-skeleton />
+  } @else if (error()) {
+    <app-empty-state title="No se pudieron cargar las solicitudes" [message]="error()!">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="load()">Reintentar</button>
+    </app-empty-state>
+  } @else if (data(); as d) {
+    @if (d.content.length === 0) {
+      <app-empty-state [icon]="icons.Inbox" [title]="status() ? 'No hay solicitudes en este estado' : 'Aún no llegan solicitudes'"
+                       message="Cuando alguien envíe el formulario de diagnóstico desde la página, aparecerá aquí." />
+    } @else {
+      <div class="overflow-x-auto" [class.opacity-60]="loading()">
+        <table class="table">
+          <thead>
+            <tr><th>Persona</th><th class="hidden md:table-cell">Sector</th><th class="hidden sm:table-cell">Recibida</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            @for (r of d.content; track r.id) {
+              <tr class="clickable" (click)="open(r)" (keydown.enter)="open(r)" tabindex="0" [attr.aria-label]="'Ver solicitud de ' + r.fullName">
+                <td>
+                  <p class="font-semibold text-fg">{{ r.fullName }}</p>
+                  <p class="text-[12.5px] text-fg-3">{{ r.company || r.phone }}</p>
+                </td>
+                <td class="hidden text-fg-2 md:table-cell">{{ sectors[r.sector] }}</td>
+                <td class="hidden whitespace-nowrap text-fg-2 sm:table-cell">{{ r.createdAt | date }}</td>
+                <td><span class="badge {{ statusLabels[r.status].tone }}">{{ statusLabels[r.status].label }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [page]="d.page.number" [size]="d.page.size" [total]="d.page.totalElements" (pageChange)="goTo($event)" />
+    }
+  }
+</section>
+
+<!-- Panel lateral de detalle -->
+@if (selected(); as s) {
+  <div class="fixed inset-0 z-40 bg-[var(--overlay)]" (click)="close()" aria-hidden="true"></div>
+  <aside class="fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col border-l border-line bg-[var(--bg-elev)] shadow-[var(--shadow-2)]"
+         style="animation: slide-in .25s var(--ease-snappy) both" role="dialog" aria-modal="true" aria-labelledby="detail-title" (keydown.escape)="close()">
+    <header class="flex items-start gap-3 border-b border-line px-6 py-5">
+      <div class="min-w-0 flex-1">
+        <h2 id="detail-title" class="truncate text-[18px] font-bold">{{ s.fullName }}</h2>
+        <p class="mt-0.5 text-[12.5px] text-fg-3">Recibida el {{ s.createdAt | date }}</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-icon" (click)="close()" aria-label="Cerrar" autofocus><lucide-icon [img]="icons.X" [size]="18" /></button>
+    </header>
+
+    <div class="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+      <!-- Contacto -->
+      <div class="flex flex-wrap gap-2">
+        <a class="btn btn-secondary btn-sm" [href]="whatsapp(s.phone)" target="_blank" rel="noopener"><lucide-icon [img]="icons.MessageCircle" [size]="15" />WhatsApp</a>
+        <a class="btn btn-secondary btn-sm" [href]="'tel:' + s.phone"><lucide-icon [img]="icons.Phone" [size]="15" />Llamar</a>
+        @if (s.email) { <a class="btn btn-secondary btn-sm" [href]="'mailto:' + s.email"><lucide-icon [img]="icons.Mail" [size]="15" />Correo</a> }
+      </div>
+
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-4 text-[13.5px]">
+        <div><dt class="text-[12px] text-fg-3">Teléfono</dt><dd class="mt-0.5 font-semibold">{{ s.phone }}</dd></div>
+        <div><dt class="text-[12px] text-fg-3">Correo</dt><dd class="mt-0.5 break-all font-semibold">{{ s.email || '—' }}</dd></div>
+        <div><dt class="text-[12px] text-fg-3">Empresa</dt><dd class="mt-0.5 font-semibold">{{ s.company || '—' }}</dd></div>
+        <div><dt class="text-[12px] text-fg-3">Sector</dt><dd class="mt-0.5 font-semibold">{{ sectors[s.sector] }}</dd></div>
+        <div><dt class="text-[12px] text-fg-3">Presupuesto</dt><dd class="mt-0.5 font-semibold">{{ budgets[s.budget] || s.budget }}</dd></div>
+        <div><dt class="text-[12px] text-fg-3">Autorización de datos</dt><dd class="mt-0.5 font-semibold">{{ s.consentAcceptedAt | date: 'd MMM y' }}</dd></div>
+      </dl>
+
+      <div>
+        <p class="text-[12px] text-fg-3">Qué quiere resolver</p>
+        <p class="mt-1.5 whitespace-pre-line rounded-xl border border-line bg-surface p-4 text-[13.5px] text-fg">{{ s.need }}</p>
+      </div>
+
+      <!-- Seguimiento -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4 border-t border-line pt-5">
+        <h3 class="text-[14px] font-bold">Seguimiento interno</h3>
+        <div>
+          <label class="label" for="d-status">Estado</label>
+          <select id="d-status" class="input" formControlName="status">
+            @for (st of statuses; track st) { <option [value]="st">{{ statusLabels[st].label }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="label" for="d-notes">Notas internas</label>
+          <textarea id="d-notes" class="input" formControlName="internalNotes" rows="4" maxlength="2000"
+                    placeholder="Lo que conversaron, próximos pasos… (no lo ve el cliente)"></textarea>
+          <p class="hint">{{ form.controls.internalNotes.value.length }}/2000</p>
+        </div>
+        @if (canManage()) {
+          <div class="flex items-center justify-between gap-2">
+            <button type="button" class="btn btn-ghost btn-sm text-danger" (click)="remove()"><lucide-icon [img]="icons.Trash2" [size]="15" />Eliminar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving() || form.pristine">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button>
+          </div>
+        } @else {
+          <p class="hint">Solo puedes consultar. Para actualizar el seguimiento necesitas el permiso de gestión de solicitudes.</p>
+        }
+      </form>
+    </div>
+  </aside>
+}

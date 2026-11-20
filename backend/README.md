@@ -1,112 +1,110 @@
 # dabliu-api
 
-API de DABLIU SOLUCIONES. Recibe las solicitudes del **Diagnóstico Tecnológico Gratuito** que llegan desde la landing (`dabliu-web`) y permite gestionarlas internamente.
+API de **DABLIU SaaS** (DABLIU SOLUCIONES). Monolito modular con Spring Boot.
 
-Spring Boot 4.1 · Java 17 · PostgreSQL · Flyway · Spring Security (HTTP Basic para el administrador).
+- **Público:** recibe las solicitudes del Diagnóstico Tecnológico Gratuito desde la landing (`dabliu-web`).
+- **Privado:** usuarios, roles y permisos, sesiones seguras, auditoría, panel y bandeja de solicitudes, que usa la app privada (`dabliu-app`).
 
-## Endpoints
+Spring Boot 4.1 · Java 17 · PostgreSQL · Flyway · Spring Security (JWT en cookies HttpOnly) · springdoc-openapi.
 
-| Método | Ruta | Acceso | Uso |
-|---|---|---|---|
-| POST | `/api/v1/diagnostic-requests` | Público (CORS + límite por IP) | Formulario de la landing. Responde **201** |
-| GET | `/api/v1/admin/diagnostic-requests?status=NEW&page=0&size=20` | Admin | Listar solicitudes (más recientes primero) |
-| GET | `/api/v1/admin/diagnostic-requests/{id}` | Admin | Ver una solicitud |
-| PATCH | `/api/v1/admin/diagnostic-requests/{id}` | Admin | Cambiar estado y notas internas |
-| DELETE | `/api/v1/admin/diagnostic-requests/{id}` | Admin | Borrar datos (derecho de supresión, Ley 1581) |
-| GET | `/actuator/health` | Público | Monitoreo |
+## Módulos
 
-### POST /api/v1/diagnostic-requests
+| Paquete | Contenido |
+|---|---|
+| `auth` | Login, renovación con rotación de refresh tokens, sesiones por dispositivo, contraseña, invitaciones, historial de acceso |
+| `users` | Usuarios, roles y permisos; reglas de protección del superadministrador |
+| `audit` | Bitácora de actividad (quién hizo qué) |
+| `dashboard` | Indicadores con datos reales, filtrados por permiso |
+| `diagnostic` | Formulario público de la landing y bandeja interna |
+| `common`, `config` | Errores (RFC 9457), seguridad, CORS, límites por IP, OpenAPI |
 
-```json
-{
-  "fullName": "Ana Pérez",
-  "company": "Transportes del Pacífico",
-  "phone": "+57 315 000 0000",
-  "email": "ana@ejemplo.co",
-  "sector": "TRANSPORT_LOGISTICS",
-  "budget": "FROM_5M_TO_15M",
-  "need": "Llevamos los pedidos por WhatsApp y Excel y se nos pierden.",
-  "dataConsent": true
-}
+## Seguridad (resumen)
+
+- **Sesión:** JWT de acceso (15 min) en la cookie `dabliu_at` y refresh token rotativo (14 días) en `dabliu_rt` (HttpOnly, Secure, SameSite). Nada en localStorage.
+  - Si un refresh token ya usado vuelve a aparecer, se cierra toda esa sesión, porque puede tratarse de un robo.
+- **Permisos:** roles y permisos en la base de datos, verificados en cada endpoint con `@PreAuthorize`. Los roles y la desactivación se leen en cada solicitud, así que aplican de inmediato.
+- **CSRF:** activo para la app (cookie `XSRF-TOKEN` + encabezado `X-XSRF-TOKEN`).
+  - Se usa un filtro JWT propio a propósito: el soporte `oauth2ResourceServer` de Spring desactiva CSRF ante cualquier token, incluido el de la cookie.
+  - Exentos: el formulario público y las herramientas que envían `Authorization: Bearer`.
+- **Contraseñas:** BCrypt, mínimo 10 caracteres con letras y números, y bloqueo temporal tras 5 intentos fallidos.
+- **Respuestas que no revelan correos registrados:** el login y la recuperación responden igual exista o no el correo.
+- **Límites por IP:** en el formulario público y en las rutas de autenticación.
+- **Errores:** nunca muestran trazas. Siempre usan el formato `application/problem+json` con mensajes en español.
+
+## Ejecutar en local (desarrollo)
+
+```powershell
+# 1. Base de datos (desde la raíz del repositorio)
+docker compose up -d            # PostgreSQL en localhost:5433
+
+# 2. API con el perfil dev
+cd backend
+$env:SPRING_PROFILES_ACTIVE = "dev"
+./mvnw spring-boot:run
 ```
 
-- `sector`: `TRANSPORT_LOGISTICS` | `COMMERCE_SERVICES` | `AUTOMOTIVE_WORKSHOPS` | `OTHER`
-- `budget`: `UNKNOWN` | `UNDER_5M` | `FROM_5M_TO_15M` | `FROM_15M_TO_40M` | `OVER_40M` (opcional, por defecto `UNKNOWN`)
-- `company` y `email` son opcionales. `dataConsent` debe ser `true`.
+El perfil `dev`:
+- Crea el primer superadministrador `admin@dabliu.local` con la contraseña `dabliu-dev-2026`.
+- Activa Swagger en <http://localhost:8080/swagger-ui.html>.
+- Escribe en el log los enlaces de invitación y recuperación, porque en desarrollo no hay correo.
 
-Respuesta `201 Created` (sin datos personales):
+**Esos valores son solo para desarrollo.**
 
-```json
-{ "id": "…uuid…", "status": "NEW", "createdAt": "2026-10-30T15:00:00Z" }
+## Pruebas
+
+```powershell
+./mvnw test     # requiere Docker encendido (Testcontainers levanta PostgreSQL real)
 ```
 
-Errores en formato `application/problem+json`. Un 400 de validación incluye `errors` por campo:
+Hay 44 pruebas:
+- **Flujos de sesión:** rotación, reutilización, bloqueo y CSRF.
+- **Permisos por rol** y reglas del superadministrador.
+- **Invitaciones** y recuperación de contraseña.
+- **Panel** y formulario público.
 
-```json
-{ "title": "Datos inválidos", "status": 400, "errors": { "need": "Entre 15 y 1500 caracteres." } }
-```
+## Endpoints principales (`/api/v1`)
 
-Si una misma IP supera el límite responde **429** con cabecera `Retry-After`.
+La documentación completa (OpenAPI) está en `/swagger-ui.html` cuando `API_DOCS_ENABLED=true`.
 
-### PATCH (seguimiento interno)
-
-```json
-{ "status": "CONTACTED", "internalNotes": "Agendado por WhatsApp para el jueves." }
-```
-
-Estados: `NEW` → `CONTACTED` → `SCHEDULED` → `COMPLETED`, o `DISCARDED`.
+| Método y ruta | Acceso |
+|---|---|
+| `POST /diagnostic-requests` | Público (formulario de la landing) |
+| `GET /auth/csrf` · `POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` | Público (con CSRF) |
+| `POST /auth/forgot-password` · `POST /auth/reset-password` · `POST /auth/accept-invitation` · `GET /auth/link-info` | Público (con CSRF) |
+| `GET /auth/me` · `GET/DELETE /auth/sessions` · `POST /auth/change-password` | Con sesión |
+| `GET/PATCH /users/me` · `GET /users/me/access-log` | Con sesión |
+| `GET /users` · `GET /users/{id}` | `users.read` |
+| `POST /users` · `PATCH /users/{id}` · `PUT /users/{id}/roles` · `PATCH /users/{id}/status` · `POST /users/{id}/invitation` | `users.manage` |
+| `GET /roles` | `roles.read` o `users.manage` |
+| `GET /users/{id}/access-log` · `GET /audit/activity` · `GET /audit/access` | `audit.read` |
+| `GET /dashboard/summary?from&to` | `dashboard.read` |
+| `GET /admin/diagnostic-requests` · `GET /admin/diagnostic-requests/{id}` | `diagnostics.read` |
+| `PATCH /admin/diagnostic-requests/{id}` · `DELETE /admin/diagnostic-requests/{id}` | `diagnostics.manage` |
 
 ## Configuración (variables de entorno)
 
 | Variable | Por defecto | Descripción |
 |---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/dabliu` | Conexión a PostgreSQL |
-| `DB_USERNAME` | `postgres` | |
-| `DB_PASSWORD` | — (obligatoria) | |
-| `ADMIN_USERNAME` | `admin` | Usuario de los endpoints `/admin` |
-| `ADMIN_PASSWORD` | — (obligatoria; en perfil `dev`: `dabliu-dev`) | |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:4200` | Dominios de la landing, separados por coma |
-| `RATE_LIMIT_MAX` | `5` (`50` en `dev`) | Solicitudes públicas por IP en cada ventana |
-| `RATE_LIMIT_WINDOW` | `10m` | Duración de la ventana |
-| `FORWARD_HEADERS_STRATEGY` | `native` | Toma la IP real del visitante detrás de un proxy interno (necesario para el límite por IP) |
-| `NOTIFY_EMAIL_TO` | vacío | Correo que recibe el aviso de cada solicitud nueva (vacío = sin aviso) |
-| `NOTIFY_EMAIL_FROM` | vacío | Remitente del aviso (algunos SMTP lo exigen) |
-| `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | — | SMTP para el aviso (p. ej. Gmail con contraseña de aplicación, o el SMTP de tu dominio) |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `…localhost:5432/dabliu`, `postgres`, obligatoria | PostgreSQL |
+| `JWT_SECRET` | **obligatoria** | Clave HMAC en Base64 de al menos 32 bytes: `openssl rand -base64 48` |
+| `APP_URL` | `http://localhost:4300` | Dirección de `dabliu-app` (para los enlaces de los correos) |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `BOOTSTRAP_ADMIN_NAME` | vacío | Primer superadministrador (solo si no hay usuarios). Después de crearlo, quita la contraseña del entorno |
+| `AUTH_SECURE_COOKIES` | `true` | `false` solo en desarrollo por http |
+| `ACCESS_TOKEN_TTL` / `REFRESH_TOKEN_TTL` | `15m` / `14d` | Duración de la sesión |
+| `AUTH_MAX_FAILED_ATTEMPTS` / `AUTH_LOCK_DURATION` | `5` / `15m` | Bloqueo por intentos fallidos |
+| `INVITATION_TTL` / `PASSWORD_RESET_TTL` | `72h` / `30m` | Vigencia de los enlaces |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:4200` | Dominios de la landing (formulario público) |
+| `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW` | `5` / `10m` | Formulario público por IP |
+| `AUTH_RATE_LIMIT_MAX` / `AUTH_RATE_LIMIT_WINDOW` | `20` / `10m` | Login y recuperación por IP |
+| `API_DOCS_ENABLED` | `false` | Swagger/OpenAPI |
+| `FORWARD_HEADERS_STRATEGY` | `native` | IP real detrás de un proxy interno |
+| `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD` | — | SMTP para invitaciones, recuperación y avisos |
+| `NOTIFY_EMAIL_TO` / `NOTIFY_EMAIL_FROM` | vacío | Aviso de solicitudes nuevas y remitente de los correos |
 | `PORT` | `8080` | |
-
-## Ejecutar en local
-
-1. Crear la base de datos (una sola vez). La tabla la crea Flyway al arrancar:
-
-   ```powershell
-   & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE dabliu;"
-   ```
-
-2. Arrancar con el perfil `dev`:
-
-   ```powershell
-   $env:DB_PASSWORD = "tu_password_de_postgres"
-   $env:SPRING_PROFILES_ACTIVE = "dev"
-   mvn spring-boot:run
-   ```
-
-3. Arrancar la landing (`dabliu-web`, `ng serve`). Ya apunta a `http://localhost:8080` en `src/app/core/api.ts`.
-
-Ver las solicitudes (Postman o PowerShell):
-
-```powershell
-curl.exe -u admin:dabliu-dev http://localhost:8080/api/v1/admin/diagnostic-requests
-```
-
-## Pruebas
-
-```powershell
-mvn test
-```
 
 ## Producción
 
-- Definir `DB_PASSWORD`, `ADMIN_PASSWORD` (larga y única) y `CORS_ALLOWED_ORIGINS=https://tu-dominio` — sin perfil `dev`.
-- Servir siempre detrás de HTTPS (HTTP Basic envía la contraseña en cada petición).
-- Cambiar `API_BASE_URL` en `dabliu-web/src/app/core/api.ts` por la URL pública de la API.
-- El límite por IP es en memoria: vale para una instancia. Si la API queda detrás de un proxy (Nginx, Render, Railway…), activar `server.forward-headers-strategy=native` para que use la IP real del visitante y no la del proxy.
+1. **Variables:** define `DB_*`, `JWT_SECRET`, `APP_URL`, `CORS_ALLOWED_ORIGINS`, el SMTP y, la primera vez, `BOOTSTRAP_ADMIN_*`, sin el perfil `dev`.
+2. **Mismo dominio para la app y la API:** sirve `dabliu-app` y la API bajo el mismo dominio, con un proxy que envíe `/api` a este servicio (p. ej. `app.dabliu.co/api`). Así las cookies son de primera parte y CSRF funciona.
+3. **HTTPS siempre:** las cookies llevan `Secure`.
+4. **Límite por IP:** es en memoria, así que vale para una sola instancia. Con varias instancias hay que moverlo al proxy o a Redis.

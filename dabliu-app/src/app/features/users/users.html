@@ -1,0 +1,125 @@
+<app-page-header title="Usuarios" description="Personas con acceso a DABLIU SaaS y sus roles.">
+  @if (canManage()) {
+    <button type="button" class="btn btn-primary" (click)="openInvite()"><lucide-icon [img]="icons.UserPlus" [size]="16" />Invitar usuario</button>
+  }
+</app-page-header>
+
+<!-- Filtros -->
+<div class="mb-4 flex flex-col gap-2 sm:flex-row">
+  <label class="relative flex-1">
+    <span class="sr-only">Buscar por nombre o correo</span>
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-fg-3" aria-hidden="true"><lucide-icon [img]="icons.Search" [size]="16" /></span>
+    <input class="input pl-10" type="search" [formControl]="search" placeholder="Buscar por nombre o correo">
+  </label>
+  <select class="input sm:w-52" [value]="filters().status" (change)="navigate({ estado: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por estado">
+    <option value="">Todos los estados</option>
+    @for (s of statuses; track s) { <option [value]="s">{{ statusLabels[s].label }}</option> }
+  </select>
+  @if (roles().length) {
+    <select class="input sm:w-52" [value]="filters().role" (change)="navigate({ rol: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por rol">
+      <option value="">Todos los roles</option>
+      @for (r of roles(); track r.code) { <option [value]="r.code">{{ r.name }}</option> }
+    </select>
+  }
+</div>
+
+<section class="card overflow-hidden">
+  @if (loading() && !data()) {
+    <app-table-skeleton />
+  } @else if (error()) {
+    <app-empty-state title="No se pudieron cargar los usuarios" [message]="error()!">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="load()">Reintentar</button>
+    </app-empty-state>
+  } @else if (data(); as d) {
+    @if (d.content.length === 0) {
+      <app-empty-state [icon]="icons.UsersRound" title="No hay usuarios con esos filtros" message="Prueba con otra búsqueda o quita los filtros." />
+    } @else {
+      <div class="overflow-x-auto" [class.opacity-60]="loading()">
+        <table class="table">
+          <thead><tr><th>Usuario</th><th class="hidden md:table-cell">Roles</th><th>Estado</th><th class="hidden lg:table-cell">Último acceso</th></tr></thead>
+          <tbody>
+            @for (u of d.content; track u.id) {
+              <tr class="clickable" tabindex="0" (click)="openUser(u)" (keydown.enter)="openUser(u)" [attr.aria-label]="'Ver ' + u.fullName">
+                <td>
+                  <div class="flex items-center gap-3">
+                    <app-avatar [name]="u.fullName" />
+                    <div class="min-w-0">
+                      <p class="truncate font-semibold text-fg">{{ u.fullName }}</p>
+                      <p class="truncate text-[12.5px] text-fg-3">{{ u.email }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="hidden md:table-cell">
+                  <div class="flex flex-wrap gap-1">@for (r of u.roles; track r.code) { <span class="badge no-dot">{{ r.name }}</span> }</div>
+                </td>
+                <td>
+                  <span class="badge {{ statusLabels[u.status].tone }}">{{ statusLabels[u.status].label }}</span>
+                  @if (u.locked) { <span class="badge badge-danger ml-1" title="Bloqueado por intentos fallidos"><lucide-icon [img]="icons.Lock" [size]="11" />Bloqueado</span> }
+                </td>
+                <td class="hidden whitespace-nowrap text-fg-2 lg:table-cell">{{ u.lastLoginAt ? (u.lastLoginAt | date) : 'Nunca' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [page]="d.page.number" [size]="d.page.size" [total]="d.page.totalElements" (pageChange)="navigate({ pagina: $event || null })" />
+    }
+  }
+</section>
+
+<!-- Diálogo de invitación -->
+<dialog #inviteDialog class="m-auto w-[min(520px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-fg shadow-[var(--shadow-2)] backdrop:bg-[var(--overlay)]" aria-labelledby="invite-title">
+  <form [formGroup]="inviteForm" (ngSubmit)="invite()" novalidate>
+    <header class="flex items-start justify-between gap-3 border-b border-line px-6 py-5">
+      <div>
+        <h2 id="invite-title" class="text-[17px] font-bold">Invitar usuario</h2>
+        <p class="mt-1 text-[13px] text-fg-3">Recibirá un correo para crear su contraseña. El enlace vence en 72 horas.</p>
+      </div>
+      <button type="button" class="btn btn-ghost btn-icon" (click)="closeInvite()" aria-label="Cerrar"><lucide-icon [img]="icons.X" [size]="18" /></button>
+    </header>
+    <div class="space-y-4 px-6 py-5">
+      <div>
+        <label class="label" for="i-name">Nombre completo</label>
+        <input id="i-name" class="input" formControlName="fullName" autocomplete="off"
+               [attr.aria-invalid]="inviteForm.controls.fullName.invalid && inviteForm.controls.fullName.touched">
+        @if (inviteForm.controls.fullName.invalid && inviteForm.controls.fullName.touched) { <p class="field-error">Escribe el nombre (mínimo 2 caracteres).</p> }
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="i-email">Correo</label>
+          <input id="i-email" class="input" type="email" formControlName="email" autocomplete="off"
+                 [attr.aria-invalid]="inviteForm.controls.email.invalid && inviteForm.controls.email.touched">
+          @if (inviteForm.controls.email.invalid && inviteForm.controls.email.touched) { <p class="field-error">Escribe un correo válido.</p> }
+        </div>
+        <div>
+          <label class="label" for="i-phone">Teléfono <span class="font-normal text-fg-3">(opcional)</span></label>
+          <input id="i-phone" class="input" type="tel" formControlName="phone"
+                 [attr.aria-invalid]="inviteForm.controls.phone.invalid && inviteForm.controls.phone.touched">
+          @if (inviteForm.controls.phone.invalid && inviteForm.controls.phone.touched) { <p class="field-error">Escribe un teléfono válido.</p> }
+        </div>
+      </div>
+      <fieldset>
+        <legend class="label">Roles</legend>
+        <div class="grid gap-2 sm:grid-cols-2">
+          @for (r of assignableRoles(); track r.code) {
+            <label class="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line p-3 transition-colors hover:border-line-strong"
+                   [class.border-brand]="inviteForm.controls.roles.value.includes(r.code)">
+              <input type="checkbox" class="mt-0.5 accent-[var(--brand)]" [checked]="inviteForm.controls.roles.value.includes(r.code)"
+                     (change)="toggleRole(r.code, $any($event.target).checked)">
+              <span>
+                <span class="block text-[13.5px] font-semibold">{{ r.name }}</span>
+                <span class="block text-[12px] text-fg-3">{{ r.description }}</span>
+              </span>
+            </label>
+          }
+        </div>
+        @if (inviteForm.controls.roles.invalid && inviteForm.controls.roles.touched) { <p class="field-error">Elige al menos un rol.</p> }
+      </fieldset>
+      @if (inviteError()) { <p class="rounded-xl bg-danger-soft px-4 py-3 text-[13.5px] text-danger" role="alert">{{ inviteError() }}</p> }
+    </div>
+    <footer class="flex justify-end gap-2 border-t border-line bg-surface-2 px-6 py-4">
+      <button type="button" class="btn btn-secondary" (click)="closeInvite()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="inviting()">{{ inviting() ? 'Enviando…' : 'Enviar invitación' }}</button>
+    </footer>
+  </form>
+</dialog>

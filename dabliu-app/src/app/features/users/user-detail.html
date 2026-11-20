@@ -1,0 +1,121 @@
+<a routerLink="/usuarios" class="mb-4 inline-flex items-center gap-2 text-[13px] font-semibold text-fg-3 no-underline hover:text-fg">
+  <lucide-icon [img]="icons.ArrowLeft" [size]="15" />Usuarios
+</a>
+
+@if (error()) {
+  <div class="card"><app-empty-state title="No se pudo cargar el usuario" [message]="error()!" /></div>
+} @else if (!user()) {
+  <div class="card card-pad"><div class="skeleton h-12 w-64"></div><div class="skeleton mt-6 h-40 w-full"></div></div>
+} @else {
+  @let u = user()!;
+  <!-- Encabezado -->
+  <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center animate-fade-up">
+    <app-avatar [name]="u.fullName" [size]="56" />
+    <div class="min-w-0 flex-1">
+      <h1 class="truncate text-[22px] font-bold">{{ u.fullName }} @if (isSelf()) { <span class="text-[14px] font-semibold text-fg-3">(tú)</span> }</h1>
+      <p class="truncate text-[13.5px] text-fg-3">{{ u.email }}</p>
+      <div class="mt-2 flex flex-wrap gap-1.5">
+        <span class="badge {{ statusLabels[u.status].tone }}">{{ statusLabels[u.status].label }}</span>
+        @if (u.locked) { <span class="badge badge-danger"><lucide-icon [img]="icons.Lock" [size]="11" />Bloqueado temporalmente</span> }
+        @if (u.emailVerifiedAt) { <span class="badge badge-ok no-dot"><lucide-icon [img]="icons.ShieldCheck" [size]="11" />Correo verificado</span> }
+      </div>
+    </div>
+    @if (canEdit() && !isSelf()) {
+      <div class="flex flex-wrap gap-2">
+        @if (u.status === 'INVITED') {
+          <button type="button" class="btn btn-secondary" (click)="resendInvitation()"><lucide-icon [img]="icons.MailPlus" [size]="16" />Reenviar invitación</button>
+        }
+        @if (u.status === 'INACTIVE') {
+          <button type="button" class="btn btn-secondary" (click)="setStatus(true)"><lucide-icon [img]="icons.UserCheck" [size]="16" />Reactivar</button>
+        } @else {
+          <button type="button" class="btn btn-secondary text-danger" (click)="setStatus(false)"><lucide-icon [img]="icons.UserX" [size]="16" />Desactivar</button>
+        }
+      </div>
+    }
+  </header>
+
+  @if (targetIsSuperAdmin() && !isSuperAdmin()) {
+    <p class="mb-4 rounded-xl bg-info-soft px-4 py-3 text-[13px] text-info">Este usuario es superadministrador: solo otro superadministrador puede modificarlo.</p>
+  }
+
+  <div class="grid gap-4 xl:grid-cols-2">
+    <!-- Datos -->
+    <section class="card card-pad" aria-labelledby="t-datos">
+      <h2 id="t-datos" class="mb-4 text-[15px] font-bold">Datos</h2>
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="space-y-4" novalidate>
+        <div>
+          <label class="label" for="u-name">Nombre completo</label>
+          <input id="u-name" class="input" formControlName="fullName" [attr.aria-invalid]="profileForm.controls.fullName.invalid && profileForm.controls.fullName.touched">
+          @if (profileForm.controls.fullName.invalid && profileForm.controls.fullName.touched) { <p class="field-error">Escribe el nombre.</p> }
+        </div>
+        <div>
+          <label class="label" for="u-phone">Teléfono</label>
+          <input id="u-phone" class="input" type="tel" formControlName="phone" [attr.aria-invalid]="profileForm.controls.phone.invalid && profileForm.controls.phone.touched">
+          @if (profileForm.controls.phone.invalid && profileForm.controls.phone.touched) { <p class="field-error">Escribe un teléfono válido.</p> }
+        </div>
+        <dl class="grid grid-cols-2 gap-3 text-[12.5px]">
+          <div><dt class="text-fg-3">Creado</dt><dd class="mt-0.5 text-fg-2">{{ u.createdAt | date }}</dd></div>
+          <div><dt class="text-fg-3">Último acceso</dt><dd class="mt-0.5 text-fg-2">{{ u.lastLoginAt ? (u.lastLoginAt | date) : 'Nunca' }}</dd></div>
+        </dl>
+        @if (canEdit()) {
+          <div class="flex justify-end"><button type="submit" class="btn btn-primary" [disabled]="savingProfile() || profileForm.pristine">{{ savingProfile() ? 'Guardando…' : 'Guardar' }}</button></div>
+        }
+      </form>
+    </section>
+
+    <!-- Roles -->
+    <section class="card card-pad" aria-labelledby="t-roles">
+      <h2 id="t-roles" class="mb-1 text-[15px] font-bold">Roles</h2>
+      <p class="mb-4 text-[12.5px] text-fg-3">Los cambios aplican de inmediato, incluso en sesiones abiertas.</p>
+      @if (canEdit() && roles().length) {
+        <div class="grid gap-2">
+          @for (r of assignableRoles(); track r.code) {
+            <label class="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line p-3 transition-colors hover:border-line-strong"
+                   [class.border-brand]="selectedRoles().includes(r.code)">
+              <input type="checkbox" class="mt-0.5 accent-[var(--brand)]" [checked]="selectedRoles().includes(r.code)"
+                     [disabled]="isSelf() && r.code === 'SUPER_ADMIN'" (change)="toggleRole(r.code, $any($event.target).checked)">
+              <span>
+                <span class="block text-[13.5px] font-semibold">{{ r.name }}</span>
+                <span class="block text-[12px] text-fg-3">{{ r.description }}</span>
+              </span>
+            </label>
+          }
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button type="button" class="btn btn-primary" [disabled]="savingRoles() || !rolesChanged()" (click)="saveRoles()">{{ savingRoles() ? 'Guardando…' : 'Guardar roles' }}</button>
+        </div>
+      } @else {
+        <div class="flex flex-wrap gap-1.5">@for (r of u.roles; track r.code) { <span class="badge no-dot">{{ r.name }}</span> }</div>
+      }
+    </section>
+  </div>
+
+  <!-- Historial de acceso -->
+  @if (canSeeAccess()) {
+    <section class="card mt-4 overflow-hidden" aria-labelledby="t-acceso">
+      <h2 id="t-acceso" class="border-b border-line px-5 py-4 text-[15px] font-bold">Historial de acceso</h2>
+      @if (!access()) {
+        <app-table-skeleton [rows]="4" />
+      } @else if (access()!.content.length === 0) {
+        <app-empty-state title="Sin registros de acceso" message="Aquí aparecerán los inicios de sesión, intentos fallidos y cambios de contraseña." />
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead><tr><th>Evento</th><th class="hidden sm:table-cell">Dispositivo</th><th class="hidden md:table-cell">IP</th><th>Fecha</th></tr></thead>
+            <tbody>
+              @for (e of access()!.content; track e.id) {
+                <tr>
+                  <td><span class="badge {{ events[e.event]?.tone ?? '' }}">{{ events[e.event]?.label ?? e.event }}</span></td>
+                  <td class="hidden text-fg-2 sm:table-cell">{{ describeAgent(e.userAgent) }}</td>
+                  <td class="hidden font-mono text-[12px] text-fg-3 md:table-cell">{{ e.ip ?? '—' }}</td>
+                  <td class="whitespace-nowrap text-fg-2">{{ e.createdAt | date }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination [page]="access()!.page.number" [size]="access()!.page.size" [total]="access()!.page.totalElements" (pageChange)="loadAccess($event)" />
+      }
+    </section>
+  }
+}

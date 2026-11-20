@@ -1,0 +1,215 @@
+/* =========================================================
+   DABLIU SaaS · Sistema de diseño
+   1. Tokens (variables CSS) para tema oscuro (predeterminado) y claro.
+   2. Tailwind v4 (con preflight) mapeado a esos tokens.
+   3. Componentes base reutilizables en @layer components.
+   ========================================================= */
+@import 'tailwindcss';
+
+/* ---------- 1. Tokens ---------- */
+:root, :root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #05070f;
+  --bg-elev: #0a0e1c;
+  --bg-sunken: #03050b;
+  --surface: #0d1324;
+  --surface-2: #121a30;
+  --surface-hover: #161f3a;
+  --line: rgba(120, 150, 220, 0.12);
+  --line-strong: rgba(120, 170, 255, 0.24);
+  --fg: #eef2fc;
+  --fg-2: #aab4cc;
+  --fg-3: #6f7b97;
+  --brand: #2b6bff;
+  --brand-hover: #3d7aff;
+  --brand-fg: #ffffff;
+  --brand-soft: rgba(43, 107, 255, 0.14);
+  --accent: #45dcff;
+  --ok: #3ddc97;
+  --ok-soft: rgba(61, 220, 151, 0.12);
+  --warn: #f5b942;
+  --warn-soft: rgba(245, 185, 66, 0.12);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.12);
+  --info: #6ea8ff;
+  --info-soft: rgba(110, 168, 255, 0.12);
+  --overlay: rgba(2, 4, 10, 0.72);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 0 1px rgba(43, 107, 255, 0.35), 0 8px 28px -10px rgba(43, 107, 255, 0.55);
+  --focus: 0 0 0 3px rgba(69, 220, 255, 0.35);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f5f7fc;
+  --bg-elev: #ffffff;
+  --bg-sunken: #eef1f8;
+  --surface: #ffffff;
+  --surface-2: #f6f8fd;
+  --surface-hover: #eef2fb;
+  --line: rgba(20, 40, 100, 0.1);
+  --line-strong: rgba(20, 60, 160, 0.2);
+  --fg: #0b1430;
+  --fg-2: #46536f;
+  --fg-3: #6b7792;
+  --brand: #2257e8;
+  --brand-hover: #1c4bd0;
+  --brand-fg: #ffffff;
+  --brand-soft: rgba(34, 87, 232, 0.1);
+  --accent: #0a86c4;
+  --ok: #0d8a55;
+  --ok-soft: rgba(13, 138, 85, 0.1);
+  --warn: #a8670a;
+  --warn-soft: rgba(168, 103, 10, 0.1);
+  --danger: #c93434;
+  --danger-soft: rgba(201, 52, 52, 0.09);
+  --info: #2257e8;
+  --info-soft: rgba(34, 87, 232, 0.09);
+  --overlay: rgba(10, 20, 50, 0.38);
+  --shadow-1: 0 1px 2px rgba(15, 30, 80, 0.08);
+  --shadow-2: 0 14px 34px -14px rgba(15, 30, 80, 0.25);
+  --shadow-glow: 0 0 0 1px rgba(34, 87, 232, 0.3), 0 8px 24px -12px rgba(34, 87, 232, 0.45);
+  --focus: 0 0 0 3px rgba(34, 87, 232, 0.25);
+}
+
+/* ---------- 2. Tailwind → tokens ---------- */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Sora', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.55; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; color: var(--fg); }
+  ::selection { background: var(--brand-soft); }
+  :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 8px; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+}
+
+/* ---------- 3. Componentes ---------- */
+@layer components {
+  /* Botones */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid transparent;
+    font-weight: 600; font-size: 13.5px; white-space: nowrap; cursor: pointer; user-select: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.2s, transform 0.1s;
+  }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-primary { background: var(--brand); color: var(--brand-fg); box-shadow: var(--shadow-1); }
+  .btn-primary:hover:not(:disabled) { background: var(--brand-hover); box-shadow: var(--shadow-glow); }
+  .btn-secondary { background: var(--surface-2); border-color: var(--line-strong); color: var(--fg); }
+  .btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
+  .btn-ghost { background: transparent; color: var(--fg-2); }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--fg); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn-sm { height: 30px; padding: 0 10px; font-size: 12.5px; border-radius: 8px; }
+  .btn-lg { height: 42px; padding: 0 18px; font-size: 14.5px; }
+  .btn-icon { width: 36px; padding: 0; }
+
+  /* Campos */
+  .label { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--fg-2); }
+  .input {
+    width: 100%; height: 38px; padding: 0 12px; border-radius: 10px;
+    background: var(--bg-sunken); border: 1px solid var(--line-strong); color: var(--fg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  textarea.input { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+  select.input { padding-right: 32px; }
+  .input::placeholder { color: var(--fg-3); }
+  .input:focus { outline: none; border-color: var(--brand); box-shadow: var(--focus); }
+  .input[aria-invalid='true'] { border-color: var(--danger); }
+  .field-error { margin-top: 6px; font-size: 12.5px; color: var(--danger); }
+  .hint { margin-top: 6px; font-size: 12.5px; color: var(--fg-3); }
+
+  /* Superficies */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-1); }
+  .card-pad { padding: 20px; }
+
+  /* Insignias de estado */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap;
+    background: var(--surface-2); color: var(--fg-2); border: 1px solid var(--line);
+  }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.9; }
+  .badge.no-dot::before { display: none; }
+  .badge-ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .badge-warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .badge-danger { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+  .badge-info { background: var(--info-soft); color: var(--info); border-color: transparent; }
+  .badge-brand { background: var(--brand-soft); color: var(--accent); border-color: transparent; }
+
+  /* Tablas */
+  .table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  .table th {
+    position: sticky; top: 0; z-index: 1; text-align: left; font-weight: 600; font-size: 12px; color: var(--fg-3);
+    padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  .table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .table tbody tr { transition: background-color 0.12s; }
+  .table tbody tr.clickable { cursor: pointer; }
+  .table tbody tr:hover { background: var(--surface-hover); }
+  .table tbody tr:last-child td { border-bottom: none; }
+
+  /* Esqueletos de carga */
+  .skeleton {
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-hover) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%; animation: shimmer 1.3s linear infinite;
+  }
+
+  /* Pestañas */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab {
+    position: relative; padding: 10px 12px; font-weight: 600; font-size: 13.5px; color: var(--fg-3);
+    background: none; border: none; cursor: pointer; white-space: nowrap;
+  }
+  .tab:hover { color: var(--fg); }
+  .tab[aria-selected='true'] { color: var(--fg); }
+  .tab[aria-selected='true']::after {
+    content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--brand);
+  }
+
+  .kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--line-strong); color: var(--fg-3); }
+  .num { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+}
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(6px); } }
+@keyframes slide-in { from { transform: translateX(24px); opacity: 0; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+.animate-fade-up { animation: fade-up 0.35s var(--ease-snappy) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,125 @@
+<app-page-header [title]="greeting()" description="Resumen de la operación con datos reales del periodo seleccionado.">
+  <div class="flex rounded-xl border border-line bg-surface p-1" role="group" aria-label="Periodo">
+    @for (r of ranges; track r) {
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="range() === r" [class.btn-ghost]="range() !== r"
+              [attr.aria-pressed]="range() === r" (click)="setRange(r)">{{ r }} días</button>
+    }
+  </div>
+  <button type="button" class="btn btn-ghost btn-icon" (click)="load()" aria-label="Actualizar"><lucide-icon [img]="icons.RefreshCw" [size]="16" /></button>
+</app-page-header>
+
+@if (error()) {
+  <div class="card card-pad mb-6 border-[var(--danger)] text-[13.5px] text-danger" role="alert">{{ error() }}</div>
+}
+
+@if (loading() && !data()) {
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (i of [1, 2, 3, 4]; track i) { <div class="card card-pad"><div class="skeleton h-3 w-24"></div><div class="skeleton mt-4 h-8 w-16"></div></div> }
+  </div>
+  <div class="card card-pad mt-4"><div class="skeleton h-[200px] w-full"></div></div>
+} @else if (data(); as d) {
+  <!-- Indicadores -->
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 animate-fade-up" aria-label="Indicadores">
+    @if (d.diagnostics; as dg) {
+      <article class="card card-pad">
+        <div class="flex items-center justify-between text-[12.5px] font-semibold text-fg-3">
+          Solicitudes recibidas <lucide-icon [img]="icons.Inbox" [size]="16" />
+        </div>
+        <p class="num mt-3 text-[30px] font-bold leading-none">{{ dg.receivedInPeriod | number }}</p>
+        @if (trend(); as t) {
+          <p class="mt-2 flex items-center gap-1 text-[12.5px]" [class.text-ok]="t.diff > 0" [class.text-danger]="t.diff < 0" [class.text-fg-3]="t.diff === 0">
+            <lucide-icon [img]="t.diff > 0 ? icons.TrendingUp : t.diff < 0 ? icons.TrendingDown : icons.Minus" [size]="14" />
+            @if (t.pct !== null) { {{ t.pct > 0 ? '+' : '' }}{{ t.pct }} % } @else { {{ t.diff > 0 ? '+' : '' }}{{ t.diff }} }
+            <span class="text-fg-3">vs. periodo anterior</span>
+          </p>
+        }
+      </article>
+      <article class="card card-pad">
+        <div class="flex items-center justify-between text-[12.5px] font-semibold text-fg-3">
+          Por contactar <lucide-icon [img]="icons.BellDot" [size]="16" />
+        </div>
+        <p class="num mt-3 text-[30px] font-bold leading-none" [class.text-warn]="dg.pendingNew > 0">{{ dg.pendingNew | number }}</p>
+        <a routerLink="/solicitudes" [queryParams]="{ estado: 'NEW' }" class="mt-2 inline-block text-[12.5px] font-semibold text-accent no-underline hover:underline">Ver solicitudes nuevas</a>
+      </article>
+    }
+    @if (d.users; as us) {
+      <article class="card card-pad">
+        <div class="flex items-center justify-between text-[12.5px] font-semibold text-fg-3">
+          Usuarios activos <lucide-icon [img]="icons.UsersRound" [size]="16" />
+        </div>
+        <p class="num mt-3 text-[30px] font-bold leading-none">{{ us.active | number }}</p>
+        <p class="mt-2 text-[12.5px] text-fg-3">{{ us.inactive }} inactivos</p>
+      </article>
+      <article class="card card-pad">
+        <div class="flex items-center justify-between text-[12.5px] font-semibold text-fg-3">
+          Invitaciones pendientes <lucide-icon [img]="icons.MailPlus" [size]="16" />
+        </div>
+        <p class="num mt-3 text-[30px] font-bold leading-none">{{ us.invited | number }}</p>
+        <a routerLink="/usuarios" [queryParams]="{ estado: 'INVITED' }" class="mt-2 inline-block text-[12.5px] font-semibold text-accent no-underline hover:underline">Ver invitados</a>
+      </article>
+    }
+  </section>
+
+  <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+    @if (d.diagnostics; as dg) {
+      <section class="card card-pad animate-fade-up" aria-labelledby="t-por-dia">
+        <div class="mb-5 flex items-baseline justify-between gap-3">
+          <h2 id="t-por-dia" class="text-[15px] font-bold">Solicitudes por día</h2>
+          <span class="text-[12px] text-fg-3">{{ d.period.from | date: 'd MMM' : 'UTC' }} – {{ d.period.to | date: 'd MMM y' : 'UTC' }}</span>
+        </div>
+        <app-bar-chart [points]="dg.perDay" label="Solicitudes del diagnóstico gratuito por día" />
+      </section>
+
+      <section class="card card-pad animate-fade-up" aria-labelledby="t-estado">
+        <h2 id="t-estado" class="mb-4 text-[15px] font-bold">Estado de las solicitudes</h2>
+        @if (statusTotal() === 0) {
+          <p class="text-[13.5px] text-fg-3">Aún no hay solicitudes registradas.</p>
+        } @else {
+          <ul class="space-y-3">
+            @for (s of statuses; track s) {
+              <li>
+                <div class="flex items-center justify-between text-[13px]">
+                  <span class="badge {{ statusLabels[s].tone }}">{{ statusLabels[s].label }}</span>
+                  <span class="num font-semibold">{{ dg.byStatus[s] }}</span>
+                </div>
+                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <div class="h-full rounded-full bg-brand transition-[width] duration-500" [style.width.%]="(dg.byStatus[s] / statusTotal()) * 100"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  </div>
+
+  @if (d.recentActivity; as activity) {
+    <section class="card mt-4 animate-fade-up" aria-labelledby="t-actividad">
+      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+        <h2 id="t-actividad" class="text-[15px] font-bold">Actividad reciente</h2>
+        <a routerLink="/auditoria" class="text-[12.5px] font-semibold text-accent no-underline hover:underline">Ver bitácora</a>
+      </div>
+      @if (activity.length === 0) {
+        <app-empty-state title="Sin actividad todavía" message="Aquí aparecerán las acciones del equipo: invitaciones, cambios de estado y más." [icon]="icons.Activity" />
+      } @else {
+        <ul>
+          @for (a of activity; track a.id) {
+            <li class="flex items-start gap-3 border-b border-line px-5 py-3 last:border-b-0">
+              <span class="mt-1.5 size-2 shrink-0 rounded-full bg-brand"></span>
+              <p class="flex-1 text-[13.5px]"><span class="font-semibold">{{ a.actorName }}</span> <span class="text-fg-3">·</span> <span class="text-fg-2">{{ a.summary }}</span></p>
+              <time class="shrink-0 text-[12px] text-fg-3" [attr.datetime]="a.createdAt">{{ a.createdAt | date: 'd MMM, h:mm a' }}</time>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @if (!d.diagnostics && !d.users) {
+    <div class="card mt-4">
+      <app-empty-state title="Tu panel está listo" message="Los indicadores aparecen según los módulos a los que tienes acceso. Pide a un administrador los permisos que necesites." />
+    </div>
+  }
+
+  <p class="mt-6 text-[12px] text-fg-3">Fechas en hora de Colombia. Los indicadores de CRM, proyectos y finanzas aparecerán cuando esos módulos estén activos.</p>
+}
