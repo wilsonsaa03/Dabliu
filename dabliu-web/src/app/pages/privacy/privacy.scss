@@ -1,0 +1,109 @@
+/* Lo que Tailwind no cubre bien: piezas repetidas del documento y efectos.
+   Los colores son los tokens de styles.scss (tema claro/oscuro). */
+:host { display: block; min-height: 100vh; background: var(--bg); }
+
+/* Sin el "preflight" de Tailwind las listas traen viñetas y sangría del navegador.
+   Se quitan en la capa base para que las utilidades (mt-4, grid…) sigan aplicando. */
+@layer base {
+  ol, ul { list-style: none; margin: 0; padding: 0; }
+}
+
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 10px 16px; border-radius: 10px;
+  background: var(--blue); color: #fff; font-weight: 700; text-decoration: none;
+  &:focus { top: 12px; }
+}
+
+/* Barra de progreso de lectura (CSS con scroll-driven animations; si no hay soporte, no aparece) */
+.progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .progress {
+    display: block; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    transform-origin: left; transform: scaleX(0);
+    animation: read linear both; animation-timeline: scroll(root);
+  }
+  @keyframes read { to { transform: scaleX(1); } }
+}
+
+.brand img { transition: transform 0.5s var(--ease); }
+.brand:hover img { transform: rotate(-6deg) scale(1.05); }
+.back lucide-icon { transition: transform 0.3s var(--ease); }
+.back:hover lucide-icon { transform: translateX(-3px); }
+
+/* Luz de fondo, como en la landing */
+.glow {
+  position: absolute; inset: 0 0 auto; height: 560px; pointer-events: none;
+  background: radial-gradient(60% 70% at 85% 0%, rgba(43, 107, 255, 0.18), transparent 70%), radial-gradient(40% 50% at 0% 10%, rgba(69, 220, 255, 0.07), transparent 70%);
+}
+
+/* ---------- Tarjeta de cada sección ---------- */
+.card {
+  scroll-margin-top: 96px; position: relative;
+  padding: clamp(22px, 3.2vw, 34px); border-radius: 22px;
+  border: 1px solid var(--line); background: var(--card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.35s, box-shadow 0.45s var(--ease), translate 0.9s var(--ease-out), opacity 0.9s var(--ease-out);
+  &:target { border-color: var(--line-strong); }
+}
+@media (hover: hover) {
+  .card:hover { border-color: var(--line-strong); box-shadow: 0 24px 50px -36px var(--shadow-blue); }
+  .card:hover .sec-ic { transform: translateY(-2px) rotate(-4deg); }
+}
+.sec-ic { transition: transform 0.5s var(--ease); }
+@media (max-width: 1023px) { .card { scroll-margin-top: 150px; } }
+
+/* Tipografía del texto legal: cómoda para leer */
+.doc {
+  p { font-size: 1.02rem; line-height: 1.75; color: var(--fg-2); max-width: 72ch; }
+  b { color: var(--fg); }
+  a { color: var(--cyan); font-weight: 600; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+}
+
+/* Datos de contacto en tarjetas */
+.info {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; min-width: 0;
+  border: 1px solid var(--line); background: var(--tint); color: var(--fg); text-decoration: none !important;
+  transition: border-color 0.25s, background 0.25s, transform 0.35s var(--ease);
+  lucide-icon { flex: none; color: var(--cyan); }
+  span { display: flex; flex-direction: column; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; color: var(--fg); }
+  small { font-size: 11.5px; font-weight: 600; color: var(--fg-3); letter-spacing: 0.02em; }
+}
+a.info:hover { border-color: var(--line-strong); background: var(--accent-bg); transform: translateY(-2px); }
+
+/* Listas con viñeta de verificación */
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.checks li, .right {
+  display: flex; gap: 12px; align-items: flex-start; font-size: 1.02rem; line-height: 1.65; color: var(--fg-2);
+  lucide-icon { flex: none; display: grid; place-items: center; margin-top: 3px; padding: 3px; border-radius: 7px; color: var(--ok); background: var(--ok-bg); }
+}
+.right {
+  padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--tint); font-size: 0.97rem;
+  transition: border-color 0.25s;
+  &:hover { border-color: var(--line-strong); }
+}
+ul.grid { list-style: none; margin-bottom: 0; padding: 0; }
+
+.note {
+  display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-radius: 14px;
+  border: 1px solid var(--accent-line); background: var(--accent-bg); max-width: none !important;
+  lucide-icon { flex: none; margin-top: 4px; color: var(--cyan); }
+}
+
+/* Plazos de consultas y reclamos */
+.term {
+  display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: 16px;
+  border: 1px solid var(--line); background: var(--tint);
+  transition: border-color 0.25s;
+  &:hover { border-color: var(--line-strong); }
+  p { font-size: 0.97rem !important; }
+}
+.term__ic { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: var(--cyan); background: var(--accent-bg); border: 1px solid var(--accent-line); }
+
+/* Índice: marcador de la sección activa con transición suave */
+.toc { transition: color 0.25s, border-color 0.35s var(--ease); }
+.chip:focus-visible, .toc:focus-visible { outline-offset: 2px; }
+.chips ol::-webkit-scrollbar { display: none; }
+
+lucide-icon { display: inline-flex; }

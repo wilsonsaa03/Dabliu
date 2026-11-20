@@ -5,7 +5,7 @@
  *
  * OJO: los datos de contacto también aparecen, escritos a mano, en
  *   - src/index.html (datos estructurados para Google)
- *   - public/politica-de-datos.html
+ *   - src/app/pages/privacy/privacy.html (usa CONTACT, pero revisa el texto legal)
  * Si cambias el número o el correo, cámbialos también allí.
  */
 const whatsappNumber = '573153654978'; // sin espacios ni "+", con el indicativo 57
@@ -34,7 +34,7 @@ export const CONTACT = {
 export const COMPANY = {
   name: 'DABLIU SOLUCIONES',
   nit: '', // ← p. ej. '901.234.567-8' (vacío = no se muestra)
-  privacyPolicyUrl: 'politica-de-datos.html',
+  privacyPolicyUrl: '/politica-de-datos',
 };
 
 /**

@@ -129,11 +129,16 @@ body {
   overflow-x: hidden;
   transition: background-color 0.3s, color 0.3s;
 }
-img { max-width: 100%; }
-a { color: var(--cyan); }
-:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 6px; }
-h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; color: var(--fg); }
-p { margin: 0; }
+/* Estilos base de elementos en la capa "base": así las utilidades de Tailwind (capa
+   "utilities", en src/tailwind.css) pueden sobrescribirlos en las páginas internas.
+   La landing no cambia: sus estilos de componente no tienen capa y siguen ganando. */
+@layer base {
+  img { max-width: 100%; }
+  a { color: var(--cyan); }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 6px; }
+  h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; color: var(--fg); }
+  p { margin: 0; }
+}
 [hidden] { display: none !important; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

@@ -1,0 +1,239 @@
+<!--
+  TEXTO LEGAL: copiado sin cambios del documento original. No modificar, resumir ni eliminar cláusulas.
+  REVISAR ANTES DE PUBLICAR:
+  - Si la empresa tiene NIT y dirección física, agrégalos en "Responsable".
+  - Mantén el correo y el WhatsApp iguales a los de src/app/core/contact.ts.
+  - Es una base conforme a la Ley 1581 de 2012; conviene que la revise un abogado.
+-->
+<a class="skip" href="/politica-de-datos#contenido">Saltar al contenido</a>
+
+<!-- ============ Encabezado minimalista ============ -->
+<header class="sticky top-0 z-40 border-b border-line bg-glass backdrop-blur-xl">
+  <div class="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-4 md:px-8">
+    <a routerLink="/" class="brand flex items-center gap-3 no-underline" aria-label="DABLIU Soluciones, ir a la página principal">
+      <img src="logo-dabliu.png" alt="" width="46" height="36" class="h-9 w-[46px] rounded-lg bg-black object-contain">
+      <span class="leading-none">
+        <b class="block font-display text-[17px] font-extrabold tracking-[0.06em] text-fg">DABLIU</b>
+        <small class="mt-1 block font-display text-[9px] font-semibold tracking-[0.38em] text-cyan">SOLUCIONES</small>
+      </span>
+    </a>
+    <div class="flex items-center gap-2">
+      <a routerLink="/" class="back inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-bold text-fg no-underline transition-colors hover:border-cyan hover:bg-accent">
+        <lucide-icon [img]="icons.ArrowLeft" [size]="16" aria-hidden="true"></lucide-icon>
+        <span class="hidden sm:inline">Volver al inicio</span>
+        <span class="sm:hidden">Inicio</span>
+      </a>
+      <button type="button" (click)="themes.toggle()"
+              class="inline-flex size-11 items-center justify-center rounded-xl border border-line-strong bg-transparent text-fg transition-colors hover:border-cyan hover:bg-accent"
+              [attr.aria-label]="themes.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+        <lucide-icon [img]="themes.theme() === 'dark' ? icons.Sun : icons.Moon" [size]="19" aria-hidden="true"></lucide-icon>
+      </button>
+    </div>
+  </div>
+  <span class="progress" aria-hidden="true"></span>
+</header>
+
+<main id="contenido" tabindex="-1" class="relative outline-none">
+  <!-- Fondo luminoso sutil, igual que la landing -->
+  <div class="glow" aria-hidden="true"></div>
+
+  <!-- ============ Portada del documento ============ -->
+  <div class="relative mx-auto max-w-[1200px] px-4 pb-10 pt-12 md:px-8 md:pb-14 md:pt-16">
+    <nav aria-label="Ruta de navegación" class="enter mb-6 text-sm text-fg3" style="--d: 0ms">
+      <ol class="flex flex-wrap items-center gap-2">
+        <li><a routerLink="/" class="text-fg3 no-underline hover:text-cyan">Inicio</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" class="text-fg2">Política de tratamiento de datos</li>
+      </ol>
+    </nav>
+    <span class="eyebrow enter" style="--d: 60ms">
+      <lucide-icon [img]="icons.ScrollText" [size]="14" aria-hidden="true"></lucide-icon>
+      Documento legal
+    </span>
+    <h1 class="enter mt-4 max-w-[22ch] text-[clamp(2rem,4.6vw,3.4rem)] font-extrabold leading-[1.06] tracking-[-0.03em]" style="--d: 120ms">
+      Política de tratamiento de <span class="grad">datos personales</span>
+    </h1>
+    <p class="meta enter mt-5 inline-flex items-center gap-2 text-[15px] font-semibold text-fg2" style="--d: 200ms">
+      <lucide-icon [img]="icons.CalendarClock" [size]="17" class="text-cyan" aria-hidden="true"></lucide-icon>
+      Vigente desde el 4 de noviembre de 2026.
+    </p>
+  </div>
+
+  <div class="relative mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-8 px-4 pb-20 md:px-8 lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-12">
+
+    <!-- ============ Índice: chips deslizables en celular/tablet ============ -->
+    <nav aria-label="Secciones de la política" class="chips sticky top-16 z-30 -mx-4 border-y border-line bg-glass px-4 py-3 backdrop-blur-xl md:-mx-8 md:px-8 lg:hidden">
+      <ol #chips class="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+        @for (s of sections; track s.id; let i = $index) {
+          <li class="shrink-0">
+            <a [href]="'/politica-de-datos#' + s.id" [attr.data-id]="s.id"
+               [attr.aria-current]="active() === s.id ? 'true' : null"
+               class="chip inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[13.5px] font-semibold no-underline transition-colors"
+               [class]="active() === s.id ? 'border-cyan bg-accent text-fg' : 'border-line text-fg2 hover:border-line-strong hover:text-fg'">
+              <span class="font-mono text-[11px] text-cyan">{{ i + 1 }}</span>{{ s.short }}
+            </a>
+          </li>
+        }
+      </ol>
+    </nav>
+
+    <!-- ============ Índice lateral fijo en escritorio ============ -->
+    <aside class="hidden lg:block">
+      <nav aria-label="Índice de la política" class="sticky top-24">
+        <p class="mb-3 font-mono text-[11.5px] uppercase tracking-[0.18em] text-fg3">En esta página</p>
+        <ol class="relative border-l border-line">
+          @for (s of sections; track s.id; let i = $index) {
+            <li>
+              <a [href]="'/politica-de-datos#' + s.id"
+                 [attr.aria-current]="active() === s.id ? 'true' : null"
+                 class="toc group relative -ml-px flex items-center gap-3 border-l-2 py-2.5 pl-4 pr-2 text-[14.5px] font-semibold no-underline transition-colors"
+                 [class]="active() === s.id ? 'border-cyan text-fg' : 'border-transparent text-fg2 hover:border-line-strong hover:text-fg'">
+                <span class="grid size-7 shrink-0 place-items-center rounded-lg border transition-colors"
+                      [class]="active() === s.id ? 'border-accent-line bg-accent text-cyan' : 'border-line text-fg3 group-hover:text-cyan'">
+                  <lucide-icon [img]="s.icon" [size]="15" aria-hidden="true"></lucide-icon>
+                </span>
+                <span><span class="mr-1 font-mono text-[12px] text-cyan">{{ i + 1 }}.</span>{{ s.short }}</span>
+              </a>
+            </li>
+          }
+        </ol>
+
+        <div class="mt-8 rounded-2xl border border-line bg-surface p-5">
+          <p class="font-display text-[15px] font-bold text-fg">¿Preguntas sobre tus datos?</p>
+          <p class="mt-1.5 text-[13.5px] leading-relaxed text-fg2">Escríbenos y una persona del equipo te responde.</p>
+          <a [href]="'mailto:' + contact.email" class="mt-4 inline-flex items-center gap-2 text-[14px] font-bold text-cyan no-underline hover:underline">
+            <lucide-icon [img]="icons.Mail" [size]="16" aria-hidden="true"></lucide-icon>{{ contact.email }}
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- ============ Contenido legal ============ -->
+    <article class="doc flex min-w-0 flex-col gap-5" aria-labelledby="doc-title">
+      <h2 id="doc-title" class="sr-only">Contenido de la política</h2>
+
+      <!-- 1 -->
+      <section id="responsable" class="card" appReveal aria-labelledby="t-responsable">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[0], n: 1 }" />
+        <p><b>DABLIU SOLUCIONES</b>, con domicilio en Buenaventura, Valle del Cauca, Colombia.<br>
+          Correo: <a [href]="'mailto:' + contact.email">{{ contact.email }}</a> · WhatsApp: {{ contact.whatsappLabel }}.</p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+          <a [href]="'mailto:' + contact.email" class="info">
+            <lucide-icon [img]="icons.Mail" [size]="18" aria-hidden="true"></lucide-icon>
+            <span><small>Correo</small>{{ contact.email }}</span>
+          </a>
+          <a [href]="contact.whatsappUrl" target="_blank" rel="noopener" class="info">
+            <lucide-icon [img]="icons.MessageCircle" [size]="18" aria-hidden="true"></lucide-icon>
+            <span><small>WhatsApp</small>{{ contact.whatsappLabel }}</span>
+          </a>
+          <div class="info">
+            <lucide-icon [img]="icons.MapPin" [size]="18" aria-hidden="true"></lucide-icon>
+            <span><small>Domicilio</small>{{ contact.city }}, {{ contact.region }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section id="marco-legal" class="card" appReveal aria-labelledby="t-marco-legal">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[1], n: 2 }" />
+        <p>Esta política se expide en cumplimiento de la Ley Estatutaria 1581 de 2012 y sus decretos reglamentarios, compilados en el Decreto Único 1074 de 2015.</p>
+      </section>
+
+      <!-- 3 -->
+      <section id="datos" class="card" appReveal aria-labelledby="t-datos">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[2], n: 3 }" />
+        <p>A través del formulario de diagnóstico y de nuestros canales de contacto recolectamos: nombre, número de WhatsApp o teléfono, correo electrónico (opcional), nombre de la empresa (opcional), sector del negocio y la descripción de la necesidad que nos compartes. No recolectamos datos sensibles ni datos de menores de edad.</p>
+      </section>
+
+      <!-- 4 -->
+      <section id="finalidades" class="card" appReveal aria-labelledby="t-finalidades">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[3], n: 4 }" />
+        <ul class="checks">
+          <li><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Responder tu solicitud y agendar el diagnóstico tecnológico gratuito.</span></li>
+          <li><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Contactarte por WhatsApp, llamada o correo en relación con tu solicitud.</span></li>
+          <li><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Preparar y enviarte propuestas o cotizaciones que nos pidas.</span></li>
+          <li><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Llevar un registro interno de las solicitudes recibidas.</span></li>
+        </ul>
+        <p class="note mt-5">
+          <lucide-icon [img]="icons.ShieldCheck" [size]="18" aria-hidden="true"></lucide-icon>
+          <span>No vendemos ni cedemos tus datos a terceros. Solo podrán ser tratados por proveedores tecnológicos que nos prestan servicios de alojamiento, bajo condiciones de seguridad y confidencialidad.</span>
+        </p>
+      </section>
+
+      <!-- 5 -->
+      <section id="derechos" class="card" appReveal aria-labelledby="t-derechos">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[4], n: 5 }" />
+        <p>Como titular de los datos tienes derecho a:</p>
+        <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Conocer, actualizar y rectificar tus datos personales.</span></li>
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Solicitar prueba de la autorización que nos otorgaste.</span></li>
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Ser informado sobre el uso que les hemos dado a tus datos.</span></li>
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Revocar la autorización y solicitar la supresión de tus datos cuando no se respeten los principios, derechos y garantías legales.</span></li>
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Acceder gratuitamente a tus datos personales.</span></li>
+          <li class="right"><lucide-icon [img]="icons.Check" [size]="16" aria-hidden="true"></lucide-icon><span>Presentar quejas ante la Superintendencia de Industria y Comercio por infracciones a la ley.</span></li>
+        </ul>
+      </section>
+
+      <!-- 6 -->
+      <section id="ejercer-derechos" class="card" appReveal aria-labelledby="t-ejercer-derechos">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[5], n: 6 }" />
+        <p>Escríbenos a <a [href]="'mailto:' + contact.email">{{ contact.email }}</a> indicando tu nombre, el dato de contacto con el que nos escribiste y tu solicitud.</p>
+        <ul class="mt-5 grid gap-3 md:grid-cols-2">
+          <li class="term">
+            <span class="term__ic"><lucide-icon [img]="icons.Clock" [size]="18" aria-hidden="true"></lucide-icon></span>
+            <p><b>Consultas:</b> se responden en máximo diez (10) días hábiles, prorrogables por cinco (5) días hábiles más, informándote el motivo.</p>
+          </li>
+          <li class="term">
+            <span class="term__ic"><lucide-icon [img]="icons.ListChecks" [size]="18" aria-hidden="true"></lucide-icon></span>
+            <p><b>Reclamos</b> (corrección, actualización, supresión o revocatoria): se responden en máximo quince (15) días hábiles, prorrogables por ocho (8) días hábiles más, informándote el motivo.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 7 -->
+      <section id="seguridad" class="card" appReveal aria-labelledby="t-seguridad">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[6], n: 7 }" />
+        <p>Aplicamos medidas técnicas y administrativas para proteger tus datos contra pérdida, acceso no autorizado o uso indebido. Conservamos los datos mientras sean necesarios para las finalidades descritas o mientras no solicites su supresión.</p>
+      </section>
+
+      <!-- 8 -->
+      <section id="cambios" class="card" appReveal aria-labelledby="t-cambios">
+        <ng-container *ngTemplateOutlet="head; context: { $implicit: sections[7], n: 8 }" />
+        <p>Si modificamos esta política, publicaremos la nueva versión en esta misma página indicando su fecha de vigencia.</p>
+      </section>
+
+      <!-- Cierre (no forma parte del texto legal) -->
+      <div class="mt-4 flex flex-col items-start justify-between gap-5 rounded-2xl border border-line-strong bg-accent p-6 sm:flex-row sm:items-center md:p-8" appReveal>
+        <div>
+          <p class="font-display text-[clamp(1.15rem,2vw,1.4rem)] font-bold text-fg">¿Quieres consultar o actualizar tus datos?</p>
+          <p class="mt-1 text-[14.5px] text-fg2">Escríbenos a {{ contact.email }} con tu solicitud.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a [href]="'mailto:' + contact.email" class="btn btn--primary btn--glow btn--sm">
+            <lucide-icon [img]="icons.Mail" [size]="17" aria-hidden="true"></lucide-icon>
+            Escribir un correo
+          </a>
+          <a href="/politica-de-datos#contenido" class="btn btn--ghost btn--sm">
+            <lucide-icon [img]="icons.ArrowUp" [size]="17" aria-hidden="true"></lucide-icon>
+            Volver arriba
+          </a>
+        </div>
+      </div>
+    </article>
+  </div>
+</main>
+
+<app-footer />
+
+<!-- Encabezado común de cada sección: número, ícono y título -->
+<ng-template #head let-s let-n="n">
+  <div class="mb-5 flex items-center gap-4">
+    <span class="sec-ic grid size-12 shrink-0 place-items-center rounded-2xl border border-accent-line bg-accent text-cyan">
+      <lucide-icon [img]="s.icon" [size]="22" aria-hidden="true"></lucide-icon>
+    </span>
+    <div>
+      <span class="block font-mono text-[11.5px] uppercase tracking-[0.16em] text-fg3">Sección {{ n }}</span>
+      <h2 [id]="'t-' + s.id" class="mt-1 text-[clamp(1.15rem,2vw,1.45rem)] font-bold leading-tight">{{ n }}. {{ s.title }}</h2>
+    </div>
+  </div>
+</ng-template>

@@ -1,0 +1,32 @@
+/* =========================================================
+   Tailwind CSS (v4) para las páginas internas (p. ej. /politica-de-datos).
+   - Sin "preflight": no resetea estilos globales, así la landing queda intacta.
+   - Solo escanea src/app/pages: no genera clases a partir del resto del proyecto.
+   - Los colores apuntan a los tokens de styles.scss, así respetan el tema claro/oscuro.
+   ========================================================= */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@source './app/pages';
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg-2);
+  --color-bg3: var(--bg-3);
+  --color-fg: var(--fg);
+  --color-fg2: var(--fg-2);
+  --color-fg3: var(--fg-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--blue);
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-accent: var(--accent-bg);
+  --color-accent-line: var(--accent-line);
+  --color-surface: var(--surface);
+  --color-glass: var(--glass-strong);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --font-display: var(--f-display);
+  --font-mono: var(--f-mono);
+}
