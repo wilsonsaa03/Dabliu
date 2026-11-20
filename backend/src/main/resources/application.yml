@@ -9,13 +9,17 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
   mvc:
     problemdetails:
       enabled: true
-  # Correo (SMTP) para avisos: se activa solo si defines SPRING_MAIL_HOST, SPRING_MAIL_PORT,
-  # SPRING_MAIL_USERNAME y SPRING_MAIL_PASSWORD como variables de entorno.
+  jackson:
+    time-zone: UTC
+  # Correo (SMTP) para avisos, invitaciones y recuperación de contraseña: se activa solo si defines
+  # SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME y SPRING_MAIL_PASSWORD.
   mail:
     properties:
       mail.smtp.auth: true
@@ -37,18 +41,43 @@ management:
       exposure:
         include: health
 
+# Documentación OpenAPI/Swagger: apagada por defecto (actívala con API_DOCS_ENABLED=true).
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+
 dabliu:
-  # Dominios de la landing autorizados a llamar la API (separados por coma).
+  # Dirección de la aplicación privada (dabliu-app), para los enlaces de los correos.
+  app-url: ${APP_URL:http://localhost:4300}
+  # Dominios de la landing autorizados a enviar el formulario público (separados por coma).
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
-  # Usuario interno para consultar y gestionar las solicitudes.
-  admin:
-    username: ${ADMIN_USERNAME:admin}
-    password: ${ADMIN_PASSWORD}
-  # Límite de solicitudes públicas por IP para frenar spam.
+  auth:
+    # Clave HMAC en Base64 (mínimo 32 bytes). Generar con: openssl rand -base64 48
+    jwt-secret: ${JWT_SECRET}
+    access-token-ttl: ${ACCESS_TOKEN_TTL:15m}
+    refresh-token-ttl: ${REFRESH_TOKEN_TTL:14d}
+    secure-cookies: ${AUTH_SECURE_COOKIES:true}
+    max-failed-attempts: ${AUTH_MAX_FAILED_ATTEMPTS:5}
+    lock-duration: ${AUTH_LOCK_DURATION:15m}
+    invitation-ttl: ${INVITATION_TTL:72h}
+    password-reset-ttl: ${PASSWORD_RESET_TTL:30m}
+    log-links: false
+  # Primer superadministrador (solo se usa si no existe ningún usuario).
+  bootstrap:
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    admin-name: ${BOOTSTRAP_ADMIN_NAME:}
+  # Límite de envíos del formulario público por IP (frena spam).
   rate-limit:
     max-requests: ${RATE_LIMIT_MAX:5}
     window: ${RATE_LIMIT_WINDOW:10m}
+  # Límite de intentos en login, recuperación e invitaciones por IP (frena fuerza bruta).
+  auth-rate-limit:
+    max-requests: ${AUTH_RATE_LIMIT_MAX:20}
+    window: ${AUTH_RATE_LIMIT_WINDOW:10m}
   # Aviso por correo de cada solicitud nueva (requiere también el SMTP de spring.mail).
   notifications:
     email-to: ${NOTIFY_EMAIL_TO:}

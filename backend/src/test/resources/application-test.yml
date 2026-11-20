@@ -1,0 +1,14 @@
+# Perfil de pruebas de integración (la base de datos la pone Testcontainers).
+dabliu:
+  app-url: http://localhost:4300
+  auth:
+    jwt-secret: dGVzdC1zZWNyZXQtc29sby1wYXJhLXBydWViYXMtMzItYnl0ZXMtbWluaW1v
+    log-links: false
+  bootstrap:
+    admin-email: root@dabliu.test
+    admin-password: clave-raiz-2026
+    admin-name: Raíz de pruebas
+  rate-limit:
+    max-requests: 1000
+  auth-rate-limit:
+    max-requests: 1000

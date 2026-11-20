@@ -1,5 +1,6 @@
 package co.dabliu.api.common;
 
+import co.dabliu.api.auth.AuthException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
@@ -14,7 +15,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-/** Errores en formato RFC 9457 (application/problem+json), con mensajes en español. */
+/**
+ * Errores en formato RFC 9457 (application/problem+json), con mensajes en español.
+ * Los errores de autorización (401/403) los responde Spring Security con el mismo formato
+ * (ver config/ProblemSecurityHandlers).
+ */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -42,8 +47,29 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     ProblemDetail handleNotFound(NotFoundException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("No encontrado");
+        return problem(HttpStatus.NOT_FOUND, "No encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ProblemDetail handleConflict(ConflictException ex) {
+        return problem(HttpStatus.CONFLICT, "Conflicto", ex.getMessage());
+    }
+
+    @ExceptionHandler(BusinessRuleException.class)
+    ProblemDetail handleBusinessRule(BusinessRuleException ex) {
+        return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Operación no permitida", ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthException.class)
+    ProblemDetail handleAuth(AuthException ex) {
+        ProblemDetail problem = problem(ex.status(), ex.title(), ex.getMessage());
+        problem.setProperty("code", ex.code());
+        return problem;
+    }
+
+    private static ProblemDetail problem(HttpStatus status, String title, String detail) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(title);
         return problem;
     }
 }

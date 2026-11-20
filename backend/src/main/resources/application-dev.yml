@@ -1,7 +1,29 @@
 # Perfil de desarrollo local. Activar con: SPRING_PROFILES_ACTIVE=dev
-# No usar estos valores en producción.
+# Base de datos: la del docker-compose.yml de la raíz (puerto 5433).
+# NO usar estos valores en producción.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/dabliu}
+    username: ${DB_USERNAME:dabliu}
+    password: ${DB_PASSWORD:dabliu-dev}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 dabliu:
-  admin:
-    password: ${ADMIN_PASSWORD:dabliu-dev}
+  auth:
+    # Clave solo para desarrollo (pública en el repositorio a propósito: nunca usarla en producción).
+    jwt-secret: ${JWT_SECRET:ZGFibGl1LWRldi1zb2xvLXBhcmEtZGVzYXJyb2xsby1sb2NhbC1uby11c2FyLWVuLXByb2R1Y2Npb24=}
+    secure-cookies: false
+    log-links: true
+  bootstrap:
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:admin@dabliu.local}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:dabliu-dev-2026}
+    admin-name: ${BOOTSTRAP_ADMIN_NAME:Administrador de desarrollo}
   rate-limit:
     max-requests: ${RATE_LIMIT_MAX:50}
+  auth-rate-limit:
+    max-requests: ${AUTH_RATE_LIMIT_MAX:200}

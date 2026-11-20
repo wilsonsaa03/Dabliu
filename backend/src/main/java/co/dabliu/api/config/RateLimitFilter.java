@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.http.HttpStatus;
@@ -14,21 +15,24 @@ import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Límite de solicitudes públicas por IP en ventana fija, en memoria.
+ * Límite de solicitudes POST por IP (y por ruta) en ventana fija, en memoria.
+ * Se usa para el formulario público y para las rutas de autenticación (fuerza bruta).
  * Suficiente para una sola instancia; con varias instancias habría que moverlo a Redis o al proxy.
  */
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private final Set<String> paths;
     private final int maxRequests;
     private final long windowMillis;
     private final Clock clock;
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
 
-    public RateLimitFilter(DabliuProperties.RateLimit config) {
-        this(config, Clock.systemUTC());
+    public RateLimitFilter(Set<String> paths, DabliuProperties.RateLimit config) {
+        this(paths, config, Clock.systemUTC());
     }
 
-    RateLimitFilter(DabliuProperties.RateLimit config, Clock clock) {
+    RateLimitFilter(Set<String> paths, DabliuProperties.RateLimit config, Clock clock) {
+        this.paths = Set.copyOf(paths);
         this.maxRequests = config.maxRequests();
         this.windowMillis = config.window().toMillis();
         this.clock = clock;
@@ -36,8 +40,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !("POST".equals(request.getMethod())
-            && SecurityConfig.PUBLIC_DIAGNOSTIC_PATH.equals(request.getRequestURI()));
+        return !("POST".equals(request.getMethod()) && paths.contains(request.getRequestURI()));
     }
 
     @Override
@@ -48,8 +51,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             windows.values().removeIf(w -> w.isExpired(now));
         }
 
-        Window window = windows.compute(request.getRemoteAddr(),
-            (ip, current) -> current == null || current.isExpired(now) ? new Window(now + windowMillis) : current);
+        String key = request.getRemoteAddr() + "|" + request.getRequestURI();
+        Window window = windows.compute(key,
+            (k, current) -> current == null || current.isExpired(now) ? new Window(now + windowMillis) : current);
 
         if (window.hits.incrementAndGet() > maxRequests) {
             long retryAfter = Math.max(1, (window.resetAt - now) / 1000);

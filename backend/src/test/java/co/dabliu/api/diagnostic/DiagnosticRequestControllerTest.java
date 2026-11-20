@@ -1,5 +1,12 @@
 package co.dabliu.api.diagnostic;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+
+import co.dabliu.api.auth.UserJwtAuthenticationConverter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -33,11 +40,19 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest({DiagnosticRequestController.class, AdminDiagnosticRequestController.class})
 @Import({SecurityConfig.class, ApiExceptionHandler.class})
 @TestPropertySource(properties = {
+    "dabliu.app-url=http://localhost:4300",
     "dabliu.cors.allowed-origins=https://dabliu.co",
-    "dabliu.admin.username=admin",
-    "dabliu.admin.password=secreto",
+    "dabliu.auth.jwt-secret=dGVzdC1zZWNyZXQtc29sby1wYXJhLXBydWViYXMtMzItYnl0ZXMtbWluaW1v",
+    "dabliu.auth.access-token-ttl=15m",
+    "dabliu.auth.refresh-token-ttl=14d",
+    "dabliu.auth.max-failed-attempts=5",
+    "dabliu.auth.lock-duration=15m",
+    "dabliu.auth.invitation-ttl=72h",
+    "dabliu.auth.password-reset-ttl=30m",
     "dabliu.rate-limit.max-requests=3",
     "dabliu.rate-limit.window=10m",
+    "dabliu.auth-rate-limit.max-requests=20",
+    "dabliu.auth-rate-limit.window=10m",
 })
 class DiagnosticRequestControllerTest {
 
@@ -59,6 +74,15 @@ class DiagnosticRequestControllerTest {
 
     @MockitoBean
     DiagnosticRequestService service;
+
+    // La seguridad real exige un decodificador JWT y el conversor a usuario; aquí no se usan tokens.
+    @MockitoBean
+    JwtDecoder jwtDecoder;
+
+    @MockitoBean
+    UserJwtAuthenticationConverter jwtConverter;
+
+    private static final SimpleGrantedAuthority READ = new SimpleGrantedAuthority("diagnostics.read");
 
     @Test
     void createsRequestAndReturns201() throws Exception {
@@ -143,15 +167,30 @@ class DiagnosticRequestControllerTest {
     void adminRequiresAuthentication() throws Exception {
         mvc.perform(get("/api/v1/admin/diagnostic-requests"))
             .andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/v1/admin/diagnostic-requests").with(httpBasic("admin", "incorrecta")))
+        // El usuario y contraseña básicos ya no existen: solo vale la sesión con JWT.
+        mvc.perform(get("/api/v1/admin/diagnostic-requests").with(httpBasic("admin", "secreto")))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adminRequiresPermission() throws Exception {
+        mvc.perform(get("/api/v1/admin/diagnostic-requests").with(user("dev").authorities(new SimpleGrantedAuthority("dashboard.read"))))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void publicFormDoesNotNeedCsrfButAdminWritesDo() throws Exception {
+        mvc.perform(patch("/api/v1/admin/diagnostic-requests/" + java.util.UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CONTACTED\"}")
+                .with(user("ana").authorities(new SimpleGrantedAuthority("diagnostics.manage"))))
+            .andExpect(status().isForbidden());
     }
 
     @Test
     void adminListsRequests() throws Exception {
         when(service.list(isNull(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(savedRequest())));
 
-        mvc.perform(get("/api/v1/admin/diagnostic-requests").with(httpBasic("admin", "secreto")))
+        mvc.perform(get("/api/v1/admin/diagnostic-requests").with(user("ana").authorities(READ)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content[0].fullName").value("Ana Pérez"))
             .andExpect(jsonPath("$.page.totalElements").value(1));
@@ -161,7 +200,7 @@ class DiagnosticRequestControllerTest {
     void adminFiltersByStatus() throws Exception {
         when(service.list(eq(DiagnosticStatus.NEW), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        mvc.perform(get("/api/v1/admin/diagnostic-requests").param("status", "NEW").with(httpBasic("admin", "secreto")))
+        mvc.perform(get("/api/v1/admin/diagnostic-requests").param("status", "NEW").with(user("ana").authorities(READ)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.page.totalElements").value(0));
     }

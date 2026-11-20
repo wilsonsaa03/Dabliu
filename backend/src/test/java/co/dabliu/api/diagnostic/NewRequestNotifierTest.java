@@ -28,9 +28,13 @@ class NewRequestNotifierTest {
         ObjectProvider<JavaMailSender> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(available);
         DabliuProperties properties = new DabliuProperties(
+            "http://localhost:4300",
             new DabliuProperties.Cors(List.of("http://localhost:4200")),
-            new DabliuProperties.Admin("admin", "secret"),
+            new DabliuProperties.Auth("c2VjcmV0", Duration.ofMinutes(15), Duration.ofDays(14), true, 5,
+                Duration.ofMinutes(15), Duration.ofHours(72), Duration.ofMinutes(30), false),
+            null,
             new DabliuProperties.RateLimit(5, Duration.ofMinutes(10)),
+            new DabliuProperties.RateLimit(20, Duration.ofMinutes(10)),
             new DabliuProperties.Notifications(emailTo, ""));
         return new NewRequestNotifier(provider, properties);
     }

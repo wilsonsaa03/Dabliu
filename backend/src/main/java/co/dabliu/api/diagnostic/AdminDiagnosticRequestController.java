@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,7 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Gestión interna de las solicitudes. Requiere el usuario administrador (HTTP Basic). */
+/**
+ * Bandeja interna de solicitudes del diagnóstico gratuito.
+ * Leer exige "diagnostics.read"; cambiar estado, notas o eliminar exige "diagnostics.manage".
+ */
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Diagnóstico gratuito", description = "Solicitudes recibidas desde la landing")
 @RestController
 @RequestMapping("/api/v1/admin/diagnostic-requests")
 public class AdminDiagnosticRequestController {
@@ -29,6 +34,7 @@ public class AdminDiagnosticRequestController {
         this.service = service;
     }
 
+    @PreAuthorize("hasAuthority('diagnostics.read')")
     @GetMapping
     public PagedModel<DiagnosticRequestView> list(
             @RequestParam(required = false) DiagnosticStatus status,
@@ -36,17 +42,20 @@ public class AdminDiagnosticRequestController {
         return new PagedModel<>(service.list(status, pageable).map(DiagnosticRequestView::from));
     }
 
+    @PreAuthorize("hasAuthority('diagnostics.read')")
     @GetMapping("/{id}")
     public DiagnosticRequestView get(@PathVariable UUID id) {
         return DiagnosticRequestView.from(service.get(id));
     }
 
+    @PreAuthorize("hasAuthority('diagnostics.manage')")
     @PatchMapping("/{id}")
     public DiagnosticRequestView updateTracking(@PathVariable UUID id,
                                                 @Valid @RequestBody UpdateDiagnosticTracking body) {
         return DiagnosticRequestView.from(service.updateTracking(id, body));
     }
 
+    @PreAuthorize("hasAuthority('diagnostics.manage')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);

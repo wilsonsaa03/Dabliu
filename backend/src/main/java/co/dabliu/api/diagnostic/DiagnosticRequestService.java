@@ -1,5 +1,7 @@
 package co.dabliu.api.diagnostic;
 
+import co.dabliu.api.audit.ActivityLogService;
+
 import co.dabliu.api.common.NotFoundException;
 import co.dabliu.api.diagnostic.dto.CreateDiagnosticRequest;
 import co.dabliu.api.diagnostic.dto.UpdateDiagnosticTracking;
@@ -23,11 +25,14 @@ public class DiagnosticRequestService {
     private final DiagnosticRequestRepository repository;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+    private final ActivityLogService activity;
 
-    public DiagnosticRequestService(DiagnosticRequestRepository repository, Clock clock, ApplicationEventPublisher events) {
+    public DiagnosticRequestService(DiagnosticRequestRepository repository, Clock clock, ApplicationEventPublisher events,
+                                    ActivityLogService activity) {
         this.repository = repository;
         this.clock = clock;
         this.events = events;
+        this.activity = activity;
     }
 
     @Transactional
@@ -63,7 +68,11 @@ public class DiagnosticRequestService {
     @Transactional
     public DiagnosticRequest updateTracking(UUID id, UpdateDiagnosticTracking input) {
         DiagnosticRequest request = get(id);
+        DiagnosticStatus before = request.getStatus();
         request.updateTracking(input.status(), blankToNull(input.internalNotes()));
+        activity.record("diagnostic.updated", "DIAGNOSTIC_REQUEST", id,
+            before == input.status() ? "Actualizó las notas de una solicitud" : "Cambió el estado de una solicitud a " + input.status(),
+            java.util.Map.of("from", before.name(), "to", input.status().name()));
         return request;
     }
 
@@ -71,6 +80,8 @@ public class DiagnosticRequestService {
     @Transactional
     public void delete(UUID id) {
         repository.delete(get(id));
+        // Sin datos personales en la bitácora: la supresión debe borrarlos de verdad.
+        activity.record("diagnostic.deleted", "DIAGNOSTIC_REQUEST", id, "Eliminó una solicitud (supresión de datos)", null);
         log.info("Solicitud de diagnóstico {} eliminada", id);
     }
 
