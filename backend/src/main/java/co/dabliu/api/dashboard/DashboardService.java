@@ -4,6 +4,7 @@ import co.dabliu.api.audit.ActivityLog;
 import co.dabliu.api.audit.ActivityLogRepository;
 import co.dabliu.api.auth.AuthenticatedUser;
 import co.dabliu.api.common.BusinessRuleException;
+import co.dabliu.api.crm.CrmEnums.LeadStage;
 import co.dabliu.api.diagnostic.DiagnosticRequestRepository;
 import co.dabliu.api.diagnostic.DiagnosticStatus;
 import co.dabliu.api.users.User;
@@ -38,13 +39,20 @@ public class DashboardService {
     private final DiagnosticRequestRepository diagnostics;
     private final UserRepository users;
     private final ActivityLogRepository activity;
+    private final co.dabliu.api.crm.LeadRepository leads;
+    private final co.dabliu.api.crm.StageChangeRepository stageChanges;
+    private final co.dabliu.api.crm.ActivityRepository crmActivities;
     private final Clock clock;
 
-    public DashboardService(DiagnosticRequestRepository diagnostics, UserRepository users,
-                            ActivityLogRepository activity, Clock clock) {
+    public DashboardService(DiagnosticRequestRepository diagnostics, UserRepository users, ActivityLogRepository activity,
+                            co.dabliu.api.crm.LeadRepository leads, co.dabliu.api.crm.StageChangeRepository stageChanges,
+                            co.dabliu.api.crm.ActivityRepository crmActivities, Clock clock) {
         this.diagnostics = diagnostics;
         this.users = users;
         this.activity = activity;
+        this.leads = leads;
+        this.stageChanges = stageChanges;
+        this.crmActivities = crmActivities;
         this.clock = clock;
     }
 
@@ -55,7 +63,12 @@ public class DashboardService {
     public record UsersBlock(long active, long invited, long inactive) {}
     public record ActivityItem(UUID id, String actorName, String action, String entityType, UUID entityId,
                                String summary, Instant createdAt) {}
-    public record Summary(Period period, DiagnosticsBlock diagnostics, UsersBlock users, List<ActivityItem> recentActivity) {}
+    public record FunnelStage(LeadStage stage, String label, long total, java.math.BigDecimal value) {}
+    public record UpcomingActivity(UUID id, UUID leadId, String title, Instant dueAt, boolean overdue) {}
+    public record CrmBlock(long newLeads, long newLeadsPrevious, long openOpportunities, java.math.BigDecimal pipelineValue,
+                           long wonInPeriod, long lostInPeriod, long myOverdueActivities, List<FunnelStage> funnel,
+                           List<UpcomingActivity> myUpcoming) {}
+    public record Summary(Period period, DiagnosticsBlock diagnostics, CrmBlock crm, UsersBlock users, List<ActivityItem> recentActivity) {}
 
     @Transactional(readOnly = true)
     public Summary summary(LocalDate from, LocalDate to, AuthenticatedUser user) {
@@ -87,6 +100,30 @@ public class DashboardService {
                 byStatus, perDay);
         }
 
+        CrmBlock crmBlock = null;
+        if (user.permissions().contains("crm.read")) {
+            Instant now = Instant.now(clock);
+            Map<LeadStage, co.dabliu.api.crm.LeadRepository.StageSummary> byStage = new EnumMap<>(LeadStage.class);
+            leads.summarizeByStage().forEach(r -> byStage.put(r.getStage(), r));
+            List<FunnelStage> funnel = new ArrayList<>();
+            for (LeadStage st : LeadStage.values()) {
+                var r = byStage.get(st);
+                funnel.add(new FunnelStage(st, st.label(), r == null ? 0 : r.getTotal(), r == null ? java.math.BigDecimal.ZERO : r.getValue()));
+            }
+            List<UpcomingActivity> upcoming = crmActivities
+                .upcomingFor(user.id(), now.plus(7, ChronoUnit.DAYS), org.springframework.data.domain.PageRequest.of(0, 6)).stream()
+                .map(a -> new UpcomingActivity(a.getId(), a.getLeadId(), a.getTitle(), a.getDueAt(), a.isOverdue(now))).toList();
+            crmBlock = new CrmBlock(
+                leads.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(fromInstant, toInstant),
+                leads.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(fromInstant.minus(days, ChronoUnit.DAYS), fromInstant),
+                leads.countByStageInAndArchivedAtIsNull(LeadStage.open()),
+                leads.sumBudgetByStages(LeadStage.open()),
+                stageChanges.countByToStageAndChangedAtGreaterThanEqualAndChangedAtLessThan(LeadStage.GANADO, fromInstant, toInstant),
+                stageChanges.countByToStageAndChangedAtGreaterThanEqualAndChangedAtLessThan(LeadStage.PERDIDO, fromInstant, toInstant),
+                crmActivities.countByAssigneeIdAndCompletedAtIsNullAndDueAtBefore(user.id(), now),
+                funnel, upcoming);
+        }
+
         UsersBlock usersBlock = user.permissions().contains("users.read")
             ? new UsersBlock(users.countByStatus(UserStatus.ACTIVE), users.countByStatus(UserStatus.INVITED), users.countByStatus(UserStatus.INACTIVE))
             : null;
@@ -101,6 +138,6 @@ public class DashboardService {
                 a.getAction(), a.getEntityType(), a.getEntityId(), a.getSummary(), a.getCreatedAt())).toList();
         }
 
-        return new Summary(new Period(start, end, ZONE.getId()), diagnosticsBlock, usersBlock, recent);
+        return new Summary(new Period(start, end, ZONE.getId()), diagnosticsBlock, crmBlock, usersBlock, recent);
     }
 }

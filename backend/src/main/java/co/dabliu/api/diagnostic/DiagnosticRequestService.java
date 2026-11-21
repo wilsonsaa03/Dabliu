@@ -26,13 +26,15 @@ public class DiagnosticRequestService {
     private final Clock clock;
     private final ApplicationEventPublisher events;
     private final ActivityLogService activity;
+    private final java.util.List<DiagnosticDeletionGuard> deletionGuards;
 
     public DiagnosticRequestService(DiagnosticRequestRepository repository, Clock clock, ApplicationEventPublisher events,
-                                    ActivityLogService activity) {
+                                    ActivityLogService activity, java.util.List<DiagnosticDeletionGuard> deletionGuards) {
         this.repository = repository;
         this.clock = clock;
         this.events = events;
         this.activity = activity;
+        this.deletionGuards = deletionGuards;
     }
 
     @Transactional
@@ -79,7 +81,10 @@ public class DiagnosticRequestService {
     /** Derecho de supresión (Ley 1581 de 2012): borra la solicitud y sus datos personales. */
     @Transactional
     public void delete(UUID id) {
-        repository.delete(get(id));
+        DiagnosticRequest request = get(id);
+        deletionGuards.forEach(g -> g.checkCanDelete(id));
+        // El prospecto creado desde esta solicitud se borra en cascada (FK): la supresión es completa.
+        repository.delete(request);
         // Sin datos personales en la bitácora: la supresión debe borrarlos de verdad.
         activity.record("diagnostic.deleted", "DIAGNOSTIC_REQUEST", id, "Eliminó una solicitud (supresión de datos)", null);
         log.info("Solicitud de diagnóstico {} eliminada", id);

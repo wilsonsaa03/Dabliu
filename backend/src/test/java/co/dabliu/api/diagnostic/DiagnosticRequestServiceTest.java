@@ -19,7 +19,7 @@ class DiagnosticRequestServiceTest {
     private final Instant now = Instant.parse("2026-10-30T15:00:00Z");
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final DiagnosticRequestService service =
-        new DiagnosticRequestService(repository, Clock.fixed(now, ZoneOffset.UTC), events, mock(co.dabliu.api.audit.ActivityLogService.class));
+        new DiagnosticRequestService(repository, Clock.fixed(now, ZoneOffset.UTC), events, mock(co.dabliu.api.audit.ActivityLogService.class), java.util.List.of());
 
     @Test
     void normalizesInputAndRecordsConsent() {
