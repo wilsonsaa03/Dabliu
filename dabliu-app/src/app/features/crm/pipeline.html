@@ -1,0 +1,131 @@
+<app-page-header title="Prospectos" [description]="view() === 'tablero' && board() ? 'Valor abierto en el embudo: ' + (totalValue() | cop) : 'Oportunidades comerciales de DABLIU.'">
+  @if (canWrite()) {
+    <button type="button" class="btn btn-primary" (click)="newLead()"><lucide-icon [img]="icons.Plus" [size]="16" />Nuevo prospecto</button>
+  }
+</app-page-header>
+
+<!-- Controles -->
+<div class="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+  <label class="relative flex-1">
+    <span class="sr-only">Buscar prospectos</span>
+    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-fg-3" aria-hidden="true"><lucide-icon [img]="icons.Search" [size]="16" /></span>
+    <input class="input pl-10" type="search" [formControl]="search" placeholder="Buscar por oportunidad, persona, empresa, correo o teléfono">
+  </label>
+  <div class="flex flex-wrap gap-2">
+    <div class="flex rounded-xl border border-line bg-surface p-1" role="group" aria-label="Responsable">
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="owner() === ''" [class.btn-ghost]="owner() !== ''" (click)="nav({ responsable: null })">Todos</button>
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="owner() === 'me'" [class.btn-ghost]="owner() !== 'me'" (click)="nav({ responsable: 'me' })">Míos</button>
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="owner() === 'none'" [class.btn-ghost]="owner() !== 'none'" (click)="nav({ responsable: 'none' })">Sin asignar</button>
+    </div>
+    <div class="flex rounded-xl border border-line bg-surface p-1" role="group" aria-label="Vista">
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="view() === 'tablero'" [class.btn-ghost]="view() !== 'tablero'" (click)="nav({ vista: null, pagina: null })" aria-label="Tablero">
+        <lucide-icon [img]="icons.LayoutGrid" [size]="15" /><span class="hidden sm:inline">Tablero</span>
+      </button>
+      <button type="button" class="btn btn-sm" [class.btn-secondary]="view() === 'lista'" [class.btn-ghost]="view() !== 'lista'" (click)="nav({ vista: 'lista' })" aria-label="Lista">
+        <lucide-icon [img]="icons.List" [size]="15" /><span class="hidden sm:inline">Lista</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="card"><app-empty-state title="No se pudieron cargar los prospectos" [message]="error()!"><button type="button" class="btn btn-secondary btn-sm" (click)="load()">Reintentar</button></app-empty-state></div>
+} @else if (view() === 'tablero') {
+  @if (!board()) {
+    <div class="flex gap-3 overflow-hidden">@for (i of [1,2,3,4]; track i) { <div class="skeleton h-[420px] w-[272px] shrink-0 rounded-2xl"></div> }</div>
+  } @else {
+    <!-- Tablero Kanban -->
+    <div class="board -mx-4 flex gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10" cdkDropListGroup [class.opacity-60]="loading()">
+      @for (col of board(); track col.stage) {
+        <section class="column flex w-[272px] shrink-0 flex-col rounded-2xl border border-line bg-[var(--bg-elev)]" [attr.aria-label]="col.label">
+          <header class="flex items-center gap-2 px-3.5 pb-2 pt-3">
+            <span class="badge {{ stage[col.stage].tone }}">{{ col.label }}</span>
+            <span class="text-[12px] font-semibold text-fg-3">{{ col.total }}</span>
+            <span class="ml-auto text-[12px] text-fg-3">{{ col.value | cop: true }}</span>
+          </header>
+          <div class="flex min-h-[120px] flex-1 flex-col gap-2 px-2.5 pb-3" cdkDropList [cdkDropListData]="col.leads" (cdkDropListDropped)="drop($event, col.stage)">
+            @for (l of col.leads; track l.id) {
+              <article class="lead-card" cdkDrag [cdkDragData]="l" [cdkDragDisabled]="!canWrite() || l.converted"
+                       tabindex="0" role="button" (click)="open(l)" (keydown.enter)="open(l)" [attr.aria-label]="l.title">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1.5 size-2 shrink-0 rounded-full" [style.background]="temps[l.temperature].color" [attr.title]="temps[l.temperature].label"></span>
+                  <p class="flex-1 text-[13.5px] font-semibold leading-snug text-fg">{{ l.title }}</p>
+                </div>
+                <p class="mt-1 truncate text-[12.5px] text-fg-3">{{ l.companyName || l.contactName }}</p>
+                <div class="mt-2.5 flex items-center gap-2 text-[12px]">
+                  @if (l.estimatedBudget) { <span class="font-semibold text-fg-2">{{ l.estimatedBudget | cop: true }}</span> }
+                  @if (l.nextActivityAt) {
+                    <span class="flex items-center gap-1" [class.text-danger]="l.overdue" [class.text-fg-3]="!l.overdue" [attr.title]="l.overdue ? 'Actividad vencida' : 'Próxima actividad'">
+                      <lucide-icon [img]="icons.CalendarClock" [size]="12" />{{ l.nextActivityAt | date: 'd MMM' }}
+                    </span>
+                  }
+                  @if (l.converted) { <span class="badge badge-ok no-dot">Cliente</span> }
+                  <span class="ml-auto">
+                    @if (l.ownerName) { <app-avatar [name]="l.ownerName" [size]="22" [attr.title]="l.ownerName" /> }
+                    @else { <span class="text-[11px] text-fg-3">Sin asignar</span> }
+                  </span>
+                </div>
+                <div *cdkDragPlaceholder class="h-[86px] rounded-xl border-2 border-dashed border-line-strong"></div>
+              </article>
+            } @empty {
+              <p class="grid flex-1 place-items-center rounded-xl border border-dashed border-line px-3 py-6 text-center text-[12.5px] text-fg-3">Sin oportunidades</p>
+            }
+            @if (col.total > col.leads.length) {
+              <a class="text-center text-[12px] font-semibold text-accent no-underline hover:underline" [routerLink]="[]" [queryParams]="{ vista: 'lista' }" queryParamsHandling="merge">
+                Ver las {{ col.total }} en la lista
+              </a>
+            }
+          </div>
+        </section>
+      }
+    </div>
+    <p class="mt-1 text-[12px] text-fg-3">Arrastra una tarjeta para cambiarla de etapa. Ganado y Perdido muestran lo cerrado en los últimos 90 días.</p>
+  }
+} @else {
+  <!-- Lista -->
+  <section class="card overflow-hidden">
+    @if (!list()) {
+      <app-table-skeleton />
+    } @else if (list()!.content.length === 0) {
+      <app-empty-state [icon]="icons.Inbox" title="No hay prospectos con estos filtros" message="Crea uno nuevo o cambia la búsqueda." />
+    } @else {
+      <div class="overflow-x-auto" [class.opacity-60]="loading()">
+        <table class="table">
+          <thead><tr><th>Oportunidad</th><th>Etapa</th><th class="hidden md:table-cell">Valor</th><th class="hidden lg:table-cell">Origen</th><th class="hidden sm:table-cell">Responsable</th><th class="hidden lg:table-cell">Actualizado</th></tr></thead>
+          <tbody>
+            @for (l of list()!.content; track l.id) {
+              <tr class="clickable" tabindex="0" (click)="open(l)" (keydown.enter)="open(l)" [attr.aria-label]="l.title">
+                <td>
+                  <p class="font-semibold text-fg">{{ l.title }}</p>
+                  <p class="text-[12.5px] text-fg-3">{{ l.companyName || l.contactName }}</p>
+                </td>
+                <td><span class="badge {{ stage[l.stage].tone }}">{{ stage[l.stage].label }}</span></td>
+                <td class="hidden whitespace-nowrap md:table-cell">{{ l.estimatedBudget | cop }}</td>
+                <td class="hidden text-fg-2 lg:table-cell">{{ sources[l.source] }}</td>
+                <td class="hidden text-fg-2 sm:table-cell">{{ l.ownerName ?? 'Sin asignar' }}</td>
+                <td class="hidden whitespace-nowrap text-fg-2 lg:table-cell">{{ l.stageChangedAt | date: 'd MMM y' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [page]="list()!.page.number" [size]="list()!.page.size" [total]="list()!.page.totalElements" (pageChange)="nav({ pagina: $event ? '' + $event : null })" />
+    }
+  </section>
+}
+
+<app-lead-form (saved)="created($event)" />
+
+<!-- Motivo de pérdida -->
+<dialog #lostDialog class="m-auto w-[min(440px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-fg shadow-[var(--shadow-2)] backdrop:bg-[var(--overlay)]" aria-labelledby="lost-title" (cancel)="cancelLost()">
+  <form (ngSubmit)="confirmLost()" class="p-6">
+    <h2 id="lost-title" class="text-[16px] font-bold">¿Por qué se perdió?</h2>
+    <p class="mt-1 text-[13px] text-fg-3">El motivo queda en el historial y ayuda a mejorar las próximas propuestas.</p>
+    <label class="label mt-4" for="lost-reason">Motivo</label>
+    <input id="lost-reason" class="input" [formControl]="lostReason" maxlength="300" placeholder="Ej.: eligió otro proveedor, sin presupuesto…" autofocus>
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" class="btn btn-secondary" (click)="cancelLost()">Cancelar</button>
+      <button type="submit" class="btn btn-danger" [disabled]="!lostReason.value.trim()">Marcar como perdido</button>
+    </div>
+  </form>
+</dialog>

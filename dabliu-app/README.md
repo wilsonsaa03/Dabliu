@@ -9,7 +9,7 @@ Angular 20 (standalone, carga diferida por módulo) · Tailwind CSS v4 · Lucide
 ```powershell
 # Requiere la API en marcha (ver backend/README.md): docker compose up -d  +  backend con perfil dev
 npm install
-npm start          # http://localhost:4300  (el proxy envía /api a http://localhost:8080)
+npm start          # http://localhost:4301  (el proxy envía /api a http://localhost:8080)
 ```
 
 Primer usuario en desarrollo: `admin@dabliu.local` / `dabliu-dev-2026`.

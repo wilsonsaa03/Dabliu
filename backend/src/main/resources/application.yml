@@ -50,7 +50,7 @@ springdoc:
 
 dabliu:
   # Dirección de la aplicación privada (dabliu-app), para los enlaces de los correos.
-  app-url: ${APP_URL:http://localhost:4300}
+  app-url: ${APP_URL:http://localhost:4301}
   # Dominios de la landing autorizados a enviar el formulario público (separados por coma).
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}

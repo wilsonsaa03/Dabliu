@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
  * Pruebas end-to-end contra el sistema real en desarrollo:
  *   docker compose up -d                          (PostgreSQL)
  *   SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run   (backend, en /backend)
- *   npm start                                     (esta app en http://localhost:4300)
+ *   npm start                                     (esta app en http://localhost:4301)
  * Usa el Chrome instalado en el equipo (no descarga navegadores).
  */
 export default defineConfig({
@@ -14,7 +14,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:4300',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:4301',
     channel: 'chrome',
     headless: true,
     locale: 'es-CO',

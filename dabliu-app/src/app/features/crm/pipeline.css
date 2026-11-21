@@ -1,0 +1,24 @@
+:host { display: block; }
+
+.board { scroll-snap-type: x proximity; }
+.column { scroll-snap-align: start; max-height: calc(100vh - 260px); }
+.column > div { overflow-y: auto; }
+
+.lead-card {
+  padding: 12px; border-radius: 12px; cursor: pointer; user-select: none;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  transition: border-color 0.15s, box-shadow 0.2s, transform 0.15s;
+}
+.lead-card:hover { border-color: var(--line-strong); }
+.lead-card:focus-visible { box-shadow: var(--focus); }
+
+/* Arrastre (Angular CDK) */
+.cdk-drag-preview {
+  padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--brand);
+  box-shadow: var(--shadow-2); transform: rotate(2deg);
+}
+.cdk-drag-animating { transition: transform 200ms var(--ease-snappy); }
+.cdk-drop-list-dragging .lead-card:not(.cdk-drag-placeholder) { transition: transform 200ms var(--ease-snappy); }
+.cdk-drop-list-receiving { background: var(--brand-soft); border-radius: 12px; }
+
+@media (max-width: 640px) { .column { width: 84vw; max-height: none; } }

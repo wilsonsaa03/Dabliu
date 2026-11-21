@@ -106,6 +106,17 @@ export interface DashboardSummary {
     byStatus: Record<DiagnosticStatus, number>;
     perDay: { day: string; total: number }[];
   } | null;
+  crm: {
+    newLeads: number;
+    newLeadsPrevious: number;
+    openOpportunities: number;
+    pipelineValue: number;
+    wonInPeriod: number;
+    lostInPeriod: number;
+    myOverdueActivities: number;
+    funnel: { stage: string; label: string; total: number; value: number }[];
+    myUpcoming: { id: string; leadId: string; title: string; dueAt: string; overdue: boolean }[];
+  } | null;
   users: { active: number; invited: number; inactive: number } | null;
   recentActivity: {
     id: string; actorName: string; action: string; entityType: string; entityId: string | null; summary: string; createdAt: string;

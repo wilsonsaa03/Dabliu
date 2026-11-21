@@ -8,8 +8,8 @@ Archivo vivo: se actualiza al cerrar cada fase. Una funcionalidad aparece como *
 |---|---|---|
 | 0 · Cierre del sitio público (política de datos, SEO) | ✅ Hecha y publicada | 2026-11-20 |
 | 1 · Fundamentos (identidad, sesiones, roles, auditoría, panel) | ✅ Hecha (local, sin desplegar) | 2026-11-20 |
-| 2 · CRM | ⏳ Siguiente | — |
-| 3 · Clientes, proyectos y tareas | Pendiente | — |
+| 2 · CRM | ✅ Hecha (local, sin desplegar) | 2026-11-21 |
+| 3 · Clientes, proyectos y tareas | ⏳ Siguiente | — |
 | 4 · Portal del cliente | Pendiente (necesita dominio propio) | — |
 | 5 · Propuestas y contratos | Pendiente | — |
 | 6 · Finanzas y soporte | Pendiente | — |
@@ -89,9 +89,52 @@ Lo que cubren las pruebas end-to-end:
 - **Clave de desarrollo pública:** `application-dev.yml` incluye una clave JWT y una contraseña de desarrollo a propósito. Nunca deben usarse en producción.
 - **Costos recurrentes** (hosting, base de datos, correo, almacenamiento) a definir antes de la fase 8.
 
-## Próximas tareas (fase 2: CRM)
+## Fase 2: lo implementado
 
-1. Migración V4: `companies`, `contacts`, `leads` (con origen WEB_FORM), `opportunities`, `interactions` y `activities`, más los permisos `crm.*`.
-2. Que las solicitudes web creen un prospecto de forma automática (evento de dominio), sin cambiar el formulario público.
-3. Embudo Kanban con historial de cambios de etapa, seguimientos y recordatorios.
-4. Conversión de prospecto en cliente, a prueba de duplicados y conservando el historial.
+**Decisión de modelo:** el prospecto y la oportunidad son una sola entidad (`leads`), con su etapa en el embudo. Con dos tablas habría que duplicar datos y sincronizarlos, y el documento pide no crear tablas sin necesidad. Un cliente puede tener varias oportunidades ganadas (ventas repetidas).
+
+**Backend**
+- Migración V4:
+  - Tablas `companies`, `contacts`, `clients`, `leads`, `lead_stage_changes`, `interactions` y `activities`.
+  - Permisos `crm.read`, `crm.write`, `crm.assign`, `crm.archive`, `crm.convert`, `clients.read` y `clients.manage`.
+  - Importó a `leads` las solicitudes web existentes; en la base de desarrollo fueron 4 de 4.
+- **Cada solicitud del formulario público crea su prospecto** en la misma transacción. Es idempotente: una misma solicitud nunca genera dos prospectos.
+- **Etapas:** cada cambio queda en el historial, y marcar una oportunidad como perdida exige el motivo. Un prospecto convertido ya no cambia de etapa.
+- **Responsables:** cualquier comercial puede tomar un prospecto para sí; asignarlo a otra persona exige `crm.assign`, y solo a usuarios internos activos.
+- **Seguimiento:** interacciones (llamada, WhatsApp, correo, reunión, nota) y actividades con fecha límite y marca de vencidas.
+- **Conversión a cliente:** en una transacción con bloqueo de fila.
+  - Crea o reutiliza la empresa y el contacto.
+  - Crea el cliente, o reutiliza el de la empresa si ya existía.
+  - Rechaza una segunda conversión con 409 y conserva el prospecto.
+- **Supresión de datos:** borrar una solicitud web borra también su prospecto, salvo que ya sea cliente (en ese caso responde 422).
+- **Panel:** bloque CRM con prospectos nuevos, oportunidades abiertas y su valor, ganadas y perdidas, embudo por etapa y mis actividades.
+
+**Frontend**
+- **Prospectos:** tablero Kanban con arrastre (Angular CDK, también en pantallas táctiles); el cambio se guarda al instante y se revierte si la API falla. También vista de lista, búsqueda y filtro Míos / Sin asignar.
+- **Detalle del prospecto:** historial unificado, registro de interacciones, actividades, cambio de etapa y de responsable, conversión y archivo.
+- **Otras pantallas:** actividades (pendientes, vencidas, completadas; mías o de todos), empresas con su detalle de contactos y oportunidades, contactos y clientes (solo consulta).
+- **Dependencia nueva:** `@angular/cdk` 20.2.14, para el arrastre accesible con mouse y táctil.
+
+## Pruebas ejecutadas (2026-11-21)
+
+| Conjunto | Resultado |
+|---|---|
+| Backend: `./mvnw test` (Testcontainers + PostgreSQL 17) | 56 de 56 ✅ (12 nuevas del CRM) |
+| Frontend: unitarias | 9 de 9 ✅ |
+| End-to-end (Playwright, sistema real) | 10 de 10 ✅ (fases 1 y 2) |
+
+## Problemas encontrados y resueltos en la fase 2
+
+- **Error de diseño atrapado por una prueba:** `leads.client_id` estaba como único, y eso impedía una segunda venta a un cliente existente. Se corrigió antes de aplicar la migración en ningún ambiente.
+- **Historial desordenado en cambios simultáneos:** dos cambios de etapa en el mismo instante (por ejemplo, al convertir) quedaban en orden aleatorio. Se agregó la columna `seq` (IDENTITY) para desempatar.
+- **Error 500 en la lista de prospectos sin responsable:** `Map.of().get(null)` lanzaba NullPointerException con los prospectos del formulario web.
+- **Entidades anidadas:** Hibernate las nombraba `LeadHistory$Activity`; ahora tienen nombre explícito.
+- **Selectores mal inicializados:** cuando las opciones llegaban de forma asíncrona, el selector no mostraba el valor guardado. Se usa `[selected]` por opción.
+- **Puertos en conflicto con el proyecto ARABIAN OUD:** la base de desarrollo pasó al 5434 y la app al 4301.
+
+## Próximas tareas (fase 3: clientes, proyectos y tareas)
+
+1. Expediente completo del cliente: edición, estados, notas internas y vista 360.
+2. Proyectos vinculados a clientes: equipo, etapas, tareas y subtareas, prioridades, fechas y avance calculado según las tareas.
+3. Vistas Kanban, lista, calendario y cronograma; comentarios e incidencias.
+4. Almacenamiento privado de archivos (base del módulo de documentos y de la foto de perfil).

@@ -35,7 +35,7 @@ Spring Boot 4.1 · Java 17 · PostgreSQL · Flyway · Spring Security (JWT en co
 
 ```powershell
 # 1. Base de datos (desde la raíz del repositorio)
-docker compose up -d            # PostgreSQL en localhost:5433
+docker compose up -d            # PostgreSQL en localhost:5434
 
 # 2. API con el perfil dev
 cd backend
@@ -87,7 +87,7 @@ La documentación completa (OpenAPI) está en `/swagger-ui.html` cuando `API_DOC
 |---|---|---|
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | `…localhost:5432/dabliu`, `postgres`, obligatoria | PostgreSQL |
 | `JWT_SECRET` | **obligatoria** | Clave HMAC en Base64 de al menos 32 bytes: `openssl rand -base64 48` |
-| `APP_URL` | `http://localhost:4300` | Dirección de `dabliu-app` (para los enlaces de los correos) |
+| `APP_URL` | `http://localhost:4301` | Dirección de `dabliu-app` (para los enlaces de los correos) |
 | `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD`, `BOOTSTRAP_ADMIN_NAME` | vacío | Primer superadministrador (solo si no hay usuarios). Después de crearlo, quita la contraseña del entorno |
 | `AUTH_SECURE_COOKIES` | `true` | `false` solo en desarrollo por http |
 | `ACCESS_TOKEN_TTL` / `REFRESH_TOKEN_TTL` | `15m` / `14d` | Duración de la sesión |

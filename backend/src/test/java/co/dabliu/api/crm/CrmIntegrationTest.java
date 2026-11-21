@@ -203,6 +203,18 @@ class CrmIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void ownersListOnlyIncludesActiveCommercialTeam() throws Exception {
+        User com = createUser(unique("resp"), "COMERCIAL");
+        User dev = createUser(unique("nores"), "DEVELOPER");
+        Session session = login(com.getEmail(), DEFAULT_PASSWORD);
+        mvc.perform(get("/api/v1/crm/owners").cookie(session.cookies()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.id == '" + com.getId() + "')]").isNotEmpty())
+            .andExpect(jsonPath("$[?(@.id == '" + dev.getId() + "')]").isEmpty())
+            .andExpect(jsonPath("$[0].email").doesNotExist());
+    }
+
+    @Test
     void permissionsByRole() throws Exception {
         Session dev = login(createUser(unique("dev"), "DEVELOPER").getEmail(), DEFAULT_PASSWORD);
         Session pm = login(createUser(unique("pm"), "PROJECT_MANAGER").getEmail(), DEFAULT_PASSWORD);

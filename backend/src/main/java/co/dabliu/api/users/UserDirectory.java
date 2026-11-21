@@ -29,6 +29,14 @@ public class UserDirectory {
         return result;
     }
 
+    public record Person(UUID id, String fullName) {}
+
+    /** Personas activas con un permiso, para selectores (sin datos de contacto). */
+    @Transactional(readOnly = true)
+    public java.util.List<Person> withPermission(String permission) {
+        return users.findActiveWithPermission(permission).stream().map(u -> new Person(u.getId(), u.getFullName())).toList();
+    }
+
     /** El usuario existe, está activo y no es cliente (para asignar responsables internos). */
     @Transactional(readOnly = true)
     public boolean isActiveInternal(UUID id) {

@@ -1,0 +1,265 @@
+<a routerLink="/crm" class="mb-4 inline-flex items-center gap-2 text-[13px] font-semibold text-fg-3 no-underline hover:text-fg">
+  <lucide-icon [img]="icons.ArrowLeft" [size]="15" />Prospectos
+</a>
+
+@if (error()) {
+  <div class="card"><app-empty-state title="No se pudo cargar el prospecto" [message]="error()!" /></div>
+} @else if (!lead()) {
+  <div class="card card-pad"><div class="skeleton h-8 w-80"></div><div class="skeleton mt-6 h-48 w-full"></div></div>
+} @else {
+  @let l = lead()!;
+
+  <!-- Encabezado -->
+  <header class="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between animate-fade-up">
+    <div class="min-w-0">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="badge {{ stage[l.stage].tone }}">{{ stage[l.stage].label }}</span>
+        <span class="badge no-dot"><span class="size-2 rounded-full" [style.background]="temps[l.temperature].color"></span>{{ temps[l.temperature].label }}</span>
+        <span class="badge no-dot">{{ sources[l.source] }}</span>
+        @if (l.archived) { <span class="badge badge-warn">Archivado</span> }
+      </div>
+      <h1 class="mt-2 text-[22px] font-bold leading-tight sm:text-[24px]">{{ l.title }}</h1>
+      <p class="mt-1 text-[13.5px] text-fg-3">{{ l.companyName || l.contactName }} · creado el {{ l.createdAt | date: 'd MMM y' }} por {{ l.createdByName ?? 'el sistema' }}</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      @if (canWrite()) {
+        <label class="sr-only" for="stage-select">Etapa</label>
+        <select id="stage-select" class="input w-auto" (change)="changeStage($any($event.target).value)" [disabled]="busy() || !!l.clientId">
+          @for (s of stages; track s.code) { <option [value]="s.code" [selected]="s.code === l.stage">{{ s.label }}</option> }
+        </select>
+        <button type="button" class="btn btn-secondary" (click)="edit()"><lucide-icon [img]="icons.Pencil" [size]="15" />Editar</button>
+      }
+      @if (canConvert()) {
+        <button type="button" class="btn btn-primary" (click)="openConvert()"><lucide-icon [img]="icons.BadgeCheck" [size]="16" />Convertir en cliente</button>
+      }
+      @if (auth.can('crm.archive')) {
+        <button type="button" class="btn btn-ghost" (click)="archive(!l.archived)">
+          <lucide-icon [img]="l.archived ? icons.ArchiveRestore : icons.Archive" [size]="15" />{{ l.archived ? 'Restaurar' : 'Archivar' }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (l.clientId) {
+    <p class="mb-4 flex items-center gap-2 rounded-xl bg-ok-soft px-4 py-3 text-[13.5px] text-ok">
+      <lucide-icon [img]="icons.BadgeCheck" [size]="17" />Convertido en cliente el {{ l.convertedAt | date: 'd MMM y' }}.
+      @if (auth.can('clients.read')) { <a routerLink="/clientes" class="font-semibold text-ok underline">Ver clientes</a> }
+    </p>
+  }
+  @if (l.stage === 'PERDIDO' && l.lostReason) {
+    <p class="mb-4 rounded-xl bg-danger-soft px-4 py-3 text-[13.5px] text-danger">Perdido: {{ l.lostReason }}</p>
+  }
+
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+    <!-- Historial -->
+    <section class="card animate-fade-up" aria-labelledby="t-hist">
+      <h2 id="t-hist" class="border-b border-line px-5 py-4 text-[15px] font-bold">Historial</h2>
+      @if (canWrite()) {
+        <form [formGroup]="noteForm" (ngSubmit)="addNote()" class="border-b border-line px-5 py-4">
+          <label class="sr-only" for="note-summary">Registrar interacción</label>
+          <textarea id="note-summary" class="input" rows="2" formControlName="summary" maxlength="2000" placeholder="¿Qué pasó? Llamada, mensaje, reunión, acuerdo…"></textarea>
+          <div class="mt-2 flex items-center justify-between gap-2">
+            <div class="flex flex-wrap gap-1" role="radiogroup" aria-label="Tipo de interacción">
+              @for (t of interactionTypes; track t[0]) {
+                <label class="btn btn-sm cursor-pointer" [class.btn-secondary]="noteForm.controls.type.value === t[0]" [class.btn-ghost]="noteForm.controls.type.value !== t[0]">
+                  <input type="radio" class="sr-only" formControlName="type" [value]="t[0]">{{ t[1] }}
+                </label>
+              }
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="busy() || !noteForm.controls.summary.value.trim()">Registrar</button>
+          </div>
+        </form>
+      }
+      @if (timeline().length === 0) {
+        <app-empty-state title="Sin movimientos todavía" message="Registra la primera llamada o mensaje con este cliente potencial." />
+      } @else {
+        <ol class="relative px-5 py-4">
+          @for (item of timeline(); track item.id) {
+            <li class="relative flex gap-3 pb-5 last:pb-0">
+              <span class="absolute left-[13px] top-7 bottom-0 w-px bg-[var(--line)]" aria-hidden="true"></span>
+              @if (item.kind === 'interaction') {
+                <span class="relative grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-accent">
+                  <lucide-icon [img]="item.type === 'CALL' ? icons.Phone : item.type === 'WHATSAPP' ? icons.MessageCircle : item.type === 'EMAIL' ? icons.Mail : item.type === 'MEETING' ? icons.Users : icons.StickyNote" [size]="13" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[12.5px] text-fg-3"><span class="font-semibold text-fg-2">{{ interactionLabel[item.type] }}</span> · {{ item.who ?? 'Usuario' }} · {{ item.at | date }}</p>
+                  <p class="mt-1 whitespace-pre-line text-[13.5px] text-fg">{{ item.summary }}</p>
+                </div>
+              } @else {
+                <span class="relative grid size-7 shrink-0 place-items-center rounded-full bg-surface-2 text-fg-3"><lucide-icon [img]="icons.ArrowRightLeft" [size]="13" /></span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[13px] text-fg-2">
+                    @if (item.from) { <span class="badge {{ stage[item.from].tone }}">{{ stage[item.from].label }}</span> → }
+                    <span class="badge {{ stage[item.to].tone }}">{{ stage[item.to].label }}</span>
+                  </p>
+                  <p class="mt-1 text-[12.5px] text-fg-3">{{ item.who }} · {{ item.at | date }}@if (item.note) { · {{ item.note }} }</p>
+                </div>
+              }
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <div class="flex flex-col gap-4">
+      <!-- Actividades -->
+      <section class="card animate-fade-up" aria-labelledby="t-act">
+        <h2 id="t-act" class="border-b border-line px-5 py-4 text-[15px] font-bold">Próximas actividades</h2>
+        @if (pendingActivities().length === 0) {
+          <p class="px-5 py-4 text-[13px] text-fg-3">No hay seguimientos pendientes.</p>
+        } @else {
+          <ul>
+            @for (a of pendingActivities(); track a.id) {
+              <li class="flex items-start gap-3 border-b border-line px-5 py-3">
+                <button type="button" class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border border-line-strong hover:border-ok"
+                        [disabled]="!canWrite()" (click)="toggleActivity(a.id, true)" [attr.aria-label]="'Completar: ' + a.title"></button>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[13.5px] font-semibold">{{ activityLabel[a.type] }}: {{ a.title }}</p>
+                  <p class="text-[12.5px]" [class.text-danger]="a.overdue" [class.text-fg-3]="!a.overdue">
+                    {{ a.overdue ? 'Vencida · ' : '' }}{{ a.dueAt | date }} · {{ a.assigneeName ?? 'Sin responsable' }}
+                  </p>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+        @if (canWrite()) {
+          <form [formGroup]="activityForm" (ngSubmit)="addActivity()" class="space-y-2 px-5 py-4">
+            <div class="flex gap-2">
+              <label class="sr-only" for="act-type">Tipo</label>
+              <select id="act-type" class="input w-44 shrink-0" formControlName="type">
+                @for (t of activityTypes; track t[0]) { <option [value]="t[0]">{{ t[1] }}</option> }
+              </select>
+              <label class="sr-only" for="act-title">Actividad</label>
+              <input id="act-title" class="input" formControlName="title" maxlength="160" placeholder="Ej.: Enviar propuesta">
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <div>
+                <label class="sr-only" for="act-due">Fecha</label>
+                <input id="act-due" class="input" type="datetime-local" formControlName="dueAt">
+              </div>
+              @if (canAssign() && owners().length) {
+                <div>
+                  <label class="sr-only" for="act-who">Responsable</label>
+                  <select id="act-who" class="input" formControlName="assigneeId">
+                    @for (o of owners(); track o.id) { <option [value]="o.id">{{ o.fullName }}</option> }
+                  </select>
+                </div>
+              }
+            </div>
+            <button type="submit" class="btn btn-secondary w-full" [disabled]="busy()"><lucide-icon [img]="icons.CalendarPlus" [size]="16" />Programar actividad</button>
+          </form>
+        }
+        @if (doneActivities().length) {
+          <details class="border-t border-line px-5 py-3">
+            <summary class="cursor-pointer text-[12.5px] font-semibold text-fg-3">Completadas ({{ doneActivities().length }})</summary>
+            <ul class="mt-2 space-y-2">
+              @for (a of doneActivities(); track a.id) {
+                <li class="flex items-start gap-2 text-[13px] text-fg-3">
+                  <lucide-icon [img]="icons.Check" [size]="14" class="mt-0.5 text-ok" />
+                  <span class="flex-1 line-through">{{ a.title }}</span>
+                  @if (canWrite()) { <button type="button" class="text-[12px] font-semibold text-accent" (click)="toggleActivity(a.id, false)">Reabrir</button> }
+                </li>
+              }
+            </ul>
+          </details>
+        }
+      </section>
+
+      <!-- Datos -->
+      <section class="card card-pad animate-fade-up" aria-labelledby="t-datos">
+        <h2 id="t-datos" class="mb-4 text-[15px] font-bold">Datos</h2>
+        <div class="mb-4 flex flex-wrap gap-2">
+          @if (l.contactPhone) {
+            <a class="btn btn-secondary btn-sm" [href]="whatsapp(l.contactPhone)" target="_blank" rel="noopener"><lucide-icon [img]="icons.MessageCircle" [size]="14" />WhatsApp</a>
+            <a class="btn btn-secondary btn-sm" [href]="'tel:' + l.contactPhone"><lucide-icon [img]="icons.Phone" [size]="14" />Llamar</a>
+          }
+          @if (l.contactEmail) { <a class="btn btn-secondary btn-sm" [href]="'mailto:' + l.contactEmail"><lucide-icon [img]="icons.Mail" [size]="14" />Correo</a> }
+        </div>
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
+          <div><dt class="text-[12px] text-fg-3">Contacto</dt><dd class="mt-0.5 font-semibold">{{ l.contactName }}</dd></div>
+          <div><dt class="text-[12px] text-fg-3">Empresa</dt>
+            <dd class="mt-0.5 font-semibold">
+              @if (l.companyId) { <a [routerLink]="['/crm/empresas', l.companyId]" class="text-accent no-underline hover:underline">{{ l.companyName }}</a> }
+              @else { {{ l.companyName || '—' }} }
+            </dd></div>
+          <div><dt class="text-[12px] text-fg-3">Teléfono</dt><dd class="mt-0.5 font-semibold">{{ l.contactPhone || '—' }}</dd></div>
+          <div><dt class="text-[12px] text-fg-3">Correo</dt><dd class="mt-0.5 break-all font-semibold">{{ l.contactEmail || '—' }}</dd></div>
+          <div><dt class="text-[12px] text-fg-3">Presupuesto</dt><dd class="mt-0.5 font-semibold">{{ l.estimatedBudget | cop }}</dd></div>
+          <div><dt class="text-[12px] text-fg-3">Sector</dt><dd class="mt-0.5 font-semibold">{{ l.sector ? sectors[l.sector] : '—' }}</dd></div>
+          <div class="col-span-2"><dt class="text-[12px] text-fg-3">Responsable</dt>
+            <dd class="mt-1">
+              @if (canWrite() && canAssign() && owners().length) {
+                <select class="input" (change)="assign($any($event.target).value)" aria-label="Responsable comercial">
+                  <option value="" [selected]="!l.ownerId">Sin asignar</option>
+                  @for (o of owners(); track o.id) { <option [value]="o.id" [selected]="o.id === l.ownerId">{{ o.fullName }}</option> }
+                </select>
+              } @else if (l.ownerName) {
+                <span class="flex items-center gap-2 font-semibold"><app-avatar [name]="l.ownerName" [size]="22" />{{ l.ownerName }}</span>
+              } @else {
+                <span class="text-fg-3">Sin asignar</span>
+                @if (canWrite()) { <button type="button" class="btn btn-secondary btn-sm ml-2" (click)="takeOwnership()">Tomarlo</button> }
+              }
+            </dd></div>
+        </dl>
+        @if (l.services.length) {
+          <p class="mt-4 text-[12px] text-fg-3">Servicios de interés</p>
+          <div class="mt-1.5 flex flex-wrap gap-1.5">@for (s of l.services; track s) { <span class="badge no-dot">{{ serviceLabel[s] || s }}</span> }</div>
+        }
+        @if (l.need) {
+          <p class="mt-4 text-[12px] text-fg-3">Necesidad</p>
+          <p class="mt-1.5 whitespace-pre-line rounded-xl border border-line bg-surface-2 p-3 text-[13px]">{{ l.need }}</p>
+        }
+        @if (l.diagnosticRequestId && auth.can('diagnostics.read')) {
+          <a routerLink="/solicitudes" class="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent no-underline hover:underline">
+            <lucide-icon [img]="icons.Globe" [size]="13" />Llegó desde el formulario web
+          </a>
+        }
+      </section>
+    </div>
+  </div>
+
+  <app-lead-form (saved)="saved($event)" />
+
+  <!-- Conversión -->
+  <dialog #convertDialog class="m-auto w-[min(460px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-fg shadow-[var(--shadow-2)] backdrop:bg-[var(--overlay)]" aria-labelledby="conv-title">
+    <form [formGroup]="convertForm" (ngSubmit)="convert()" class="p-6" novalidate>
+      <h2 id="conv-title" class="text-[17px] font-bold">Convertir en cliente</h2>
+      <p class="mt-1 text-[13px] text-fg-3">Se crea el expediente del cliente con su empresa y contacto. El prospecto pasa a Ganado y conserva todo su historial.</p>
+      <div class="mt-5 space-y-4">
+        <div>
+          <label class="label" for="c-name">Nombre o razón social</label>
+          <input id="c-name" class="input" formControlName="clientName">
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="label" for="c-nit">NIT <span class="font-normal text-fg-3">(opcional)</span></label>
+            <input id="c-nit" class="input" formControlName="taxId" placeholder="900.123.456-7" [attr.aria-invalid]="convertForm.controls.taxId.invalid">
+            @if (convertForm.controls.taxId.invalid) { <p class="field-error">Solo números, puntos y guion.</p> }
+          </div>
+          <div>
+            <label class="label" for="c-date">Fecha de vinculación</label>
+            <input id="c-date" class="input" type="date" formControlName="joinedAt">
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" class="btn btn-secondary" (click)="closeConvert()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Convirtiendo…' : 'Convertir' }}</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Motivo de pérdida -->
+  <dialog #lostDialog class="m-auto w-[min(440px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-fg shadow-[var(--shadow-2)] backdrop:bg-[var(--overlay)]" aria-labelledby="lost-title2" (cancel)="cancelLost()">
+    <form (ngSubmit)="confirmLost()" class="p-6">
+      <h2 id="lost-title2" class="text-[16px] font-bold">¿Por qué se perdió?</h2>
+      <label class="label mt-4" for="lost-reason2">Motivo</label>
+      <input id="lost-reason2" class="input" [formControl]="lostReason" maxlength="300" autofocus>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" class="btn btn-secondary" (click)="cancelLost()">Cancelar</button>
+        <button type="submit" class="btn btn-danger" [disabled]="!lostReason.value.trim()">Marcar como perdido</button>
+      </div>
+    </form>
+  </dialog>
+}

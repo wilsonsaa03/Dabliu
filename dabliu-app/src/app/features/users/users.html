@@ -11,14 +11,14 @@
     <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-fg-3" aria-hidden="true"><lucide-icon [img]="icons.Search" [size]="16" /></span>
     <input class="input pl-10" type="search" [formControl]="search" placeholder="Buscar por nombre o correo">
   </label>
-  <select class="input sm:w-52" [value]="filters().status" (change)="navigate({ estado: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por estado">
-    <option value="">Todos los estados</option>
-    @for (s of statuses; track s) { <option [value]="s">{{ statusLabels[s].label }}</option> }
+  <select class="input sm:w-52" (change)="navigate({ estado: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por estado">
+    <option value="" [selected]="!filters().status">Todos los estados</option>
+    @for (s of statuses; track s) { <option [value]="s" [selected]="s === filters().status">{{ statusLabels[s].label }}</option> }
   </select>
   @if (roles().length) {
-    <select class="input sm:w-52" [value]="filters().role" (change)="navigate({ rol: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por rol">
-      <option value="">Todos los roles</option>
-      @for (r of roles(); track r.code) { <option [value]="r.code">{{ r.name }}</option> }
+    <select class="input sm:w-52" (change)="navigate({ rol: $any($event.target).value || null, pagina: null })" aria-label="Filtrar por rol">
+      <option value="" [selected]="!filters().role">Todos los roles</option>
+      @for (r of roles(); track r.code) { <option [value]="r.code" [selected]="r.code === filters().role">{{ r.name }}</option> }
     </select>
   }
 </div>

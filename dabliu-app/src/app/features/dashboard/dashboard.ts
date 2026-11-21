@@ -9,12 +9,13 @@ import { DIAGNOSTIC_STATUS } from '../../core/labels';
 import type { DashboardSummary, DiagnosticStatus } from '../../core/models';
 import { EmptyState, PageHeader } from '../../shared/ui';
 import { BarChart } from './bar-chart';
+import { CopPipe } from '../crm/crm.labels';
 
 type Range = 7 | 30 | 90;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, DecimalPipe, RouterLink, LucideAngularModule, PageHeader, EmptyState, BarChart],
+  imports: [DatePipe, DecimalPipe, RouterLink, LucideAngularModule, PageHeader, EmptyState, BarChart, CopPipe],
   templateUrl: './dashboard.html',
 })
 export class DashboardPage {
@@ -28,6 +29,7 @@ export class DashboardPage {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly statusLabels = DIAGNOSTIC_STATUS;
+  readonly Math = Math;
   readonly statuses = Object.keys(DIAGNOSTIC_STATUS) as DiagnosticStatus[];
 
   readonly greeting = computed(() => {
@@ -43,6 +45,8 @@ export class DashboardPage {
     const diff = d.receivedInPeriod - d.receivedPreviousPeriod;
     return { diff, pct: d.receivedPreviousPeriod === 0 ? null : Math.round((diff / d.receivedPreviousPeriod) * 100) };
   });
+
+  readonly funnelMax = computed(() => Math.max(1, ...(this.data()?.crm?.funnel ?? []).map((f) => f.total)));
 
   readonly statusTotal = computed(() => {
     const s = this.data()?.diagnostics?.byStatus;

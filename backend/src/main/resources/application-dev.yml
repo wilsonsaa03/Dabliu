@@ -1,9 +1,9 @@
 # Perfil de desarrollo local. Activar con: SPRING_PROFILES_ACTIVE=dev
-# Base de datos: la del docker-compose.yml de la raíz (puerto 5433).
+# Base de datos: la del docker-compose.yml de la raíz (puerto 5434).
 # NO usar estos valores en producción.
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/dabliu}
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/dabliu}
     username: ${DB_USERNAME:dabliu}
     password: ${DB_PASSWORD:dabliu-dev}
 

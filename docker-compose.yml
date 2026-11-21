@@ -1,5 +1,5 @@
 # Entorno de DESARROLLO de DABLIU SaaS.
-#   docker compose up -d        → PostgreSQL en localhost:5433 (datos persistentes en el volumen)
+#   docker compose up -d        → PostgreSQL en localhost:5434 (datos persistentes en el volumen)
 # El backend se ejecuta aparte con el perfil dev (ver backend/README.md).
 # No usar estos valores en producción.
 services:
@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: dabliu-dev
       TZ: UTC
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - dabliu-db-data:/var/lib/postgresql/data
     healthcheck:

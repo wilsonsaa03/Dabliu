@@ -44,10 +44,19 @@ public class LeadController {
 
     private final LeadService leads;
     private final ConversionService conversion;
+    private final co.dabliu.api.users.UserDirectory directory;
 
-    public LeadController(LeadService leads, ConversionService conversion) {
+    public LeadController(LeadService leads, ConversionService conversion, co.dabliu.api.users.UserDirectory directory) {
         this.leads = leads;
         this.conversion = conversion;
+        this.directory = directory;
+    }
+
+    @Operation(summary = "Personas que pueden ser responsables comerciales (solo nombre)")
+    @PreAuthorize("hasAuthority('crm.read')")
+    @GetMapping("/owners")
+    public List<co.dabliu.api.users.UserDirectory.Person> owners() {
+        return directory.withPermission("crm.write");
     }
 
     @Operation(summary = "Busca prospectos (texto, etapa, responsable, origen, temperatura)")

@@ -23,4 +23,9 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     long countActiveWithRole(@Param("roleCode") String roleCode);
 
     long countByStatus(UserStatus status);
+
+    /** Usuarios activos con un permiso (p. ej. responsables comerciales posibles). */
+    @Query("select distinct u from User u join u.roles r join r.permissions p "
+        + "where u.status = co.dabliu.api.users.UserStatus.ACTIVE and p.code = :permission order by u.fullName")
+    java.util.List<User> findActiveWithPermission(@Param("permission") String permission);
 }
