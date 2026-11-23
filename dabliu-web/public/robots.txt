@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dabliu-soluciones.vercel.app/sitemap.xml
+Sitemap: https://dabliusoluciones.tech/sitemap.xml

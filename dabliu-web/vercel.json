@@ -51,6 +51,28 @@
   ],
   "redirects": [
     {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "dabliu-soluciones.vercel.app"
+        }
+      ],
+      "destination": "https://dabliusoluciones.tech/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.dabliusoluciones.tech"
+        }
+      ],
+      "destination": "https://dabliusoluciones.tech/:path*",
+      "permanent": true
+    },
+    {
       "source": "/politica-de-datos.html",
       "destination": "/politica-de-datos",
       "permanent": true

@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 
 /** Dominio de producción. Si cambia, cámbialo también en index.html, robots.txt y sitemap.xml. */
-export const SITE_URL = 'https://dabliu-soluciones.vercel.app';
+export const SITE_URL = 'https://dabliusoluciones.tech';
 
 export interface PageSeo {
   title: string;
